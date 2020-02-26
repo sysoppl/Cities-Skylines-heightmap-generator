@@ -1,20 +1,5 @@
 'use strict'
 
-const bindings = {};
-
-const app = () => {
-    bindings.first = new Observable("Jeremy");
-    bindings.last = new Observable("");
-    bindings.full = new Computed(() =>
-        `${bindings.first.value} ${bindings.last.value}`.trim(),
-        [bindings.first, bindings.last]);
-    applyBindings();
-};
-
-setTimeout(app, 0);
-
-console.log(state);
-
 var grid = loadSettings();
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9obmJlcmciLCJhIjoiY2s2d3FwdTJpMDJnejNtbzBtb2ljbXZiYyJ9.yRKViKWpsMTtE-NPesWZvA';
@@ -255,7 +240,6 @@ function updateInfopanel() {
     document.getElementById("lat").innerHTML = grid.lat.toFixed(5);
     document.getElementById("minh").innerHTML = grid.minHeight;
     document.getElementById("maxh").innerHTML = grid.maxHeight;
-    state.lng = grid.lng.toFixed(5);
 }
 
 
