@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title>Cities map generator</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.8.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.8.0/mapbox-gl.css' rel='stylesheet' />
+
+    <script
+        src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.4.2/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet"
+        href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.4.2/mapbox-gl-geocoder.css"
+        type="text/css" />
+
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+
+<body class="row">
+    <div class="sideBar column">
+        <ul class="menu-list">
+            <li class="menu-item"><a onclick="togglePanel()" title="open info panel">
+                    <i id="panelicon" class="fas fa-info-circle"></i></a></li>
+        </ul>
+        <ul class="menu-list fill">
+            <li class="menu-item"><a onclick="getHeightmap()" title="download raw height map"><i
+                        class="fa fa-cloud-download-alt"></i></a>
+            </li>
+            <li class="menu-item"><a onclick="getHeightmap(1)" title="download image height map"><i
+                        class="fa fa-download"></i></a>
+            </li>
+        </ul>
+        <ul class="menu-list">
+            <li class="menu-item"><a onclick="zoomIn()" title="zoom in"><i class="fa fa-search-plus"></i></a></li>
+            <li class="menu-item"><a onclick="zoomOut()" title="zoom out"><i class=" fa fa-search-minus"></i></a></li>
+            <li class="menu-item"><a onclick="getHeightmap(255)" title="download tiles map"><i
+                        class="fa fa-bug"></i></a>
+            </li>
+        </ul>
+    </div>
+    <div class="fill wrapper">
+        <div id="map" class="content"></div>
+        <div id="infopanel" class="slide-out hidden">
+            <div id="geocoder" class="geocoder"></div>
+            <table class="infotable">
+                <tbody>
+                    <tr>
+                        <td>longitude:</td>
+                        <td class="unit" id="lng"></td>
+                        <td>&#176;</td>
+                    </tr>
+                    <tr>
+                        <td>latitude:</td>
+                        <td class="unit" id="lat"></td>
+                        <td>&#176;</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>min. height:</td>
+                        <td class="unit" id="minh"></td>
+                        <td>mtr.</td>
+                        <td><a onclick="getHeightmap(2)"><i class="fa fa-sync-alt"></i></a></td>
+                    </tr>
+                    <tr>
+                        <td>max. height:</td>
+                        <td class="unit" id="maxh"></td>
+                        <td>mtr.</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Settings:</td>
+                    </tr>
+                    <tr>
+                        <td>sea level:</td>
+                        <td><input data-model="seaLevel" class="number-input" type="number"></td>
+                        <td></td>
+                        <td><a onclick="getHeightmap(2)"><i class="fa fa-cog"></i></a></td>
+                    </tr>
+                    <tr>
+                        <td>height scale:</td>
+                        <td><input class="number-input" type="number" data-model="heightScale" step="0.1"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div>
+                <p data-binding="seaLevel">test</p>
+                <span data-binding="heightScale">xx</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="zlib.js"></script>
+    <script src="png.js"></script>
+    <script src='tiles.js'></script>
+    <script src="binding.js"></script>
+    <script src="map.js"></script>
+</body>
+
+</html>

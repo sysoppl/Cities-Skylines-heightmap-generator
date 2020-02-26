@@ -1,0 +1,218 @@
+html {
+    box-sizing: border-box;
+    font-family: Calibri, sans-serif;
+    font-size: 110;
+    height: 100%;
+}
+
+body {
+    height: 100%;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    font-weight: normal;
+}
+
+ol, ul {
+    list-style: none;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+blockquote, q {
+    quotes: none;
+}
+
+blockquote:before, blockquote:after, q:before, q:after {
+    content: '';
+    content: none;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+a, a:visited {
+    text-decoration: none;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+}
+
+.child {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.fixed {
+    flex: 0 0 auto;
+}
+
+.fill {
+    flex: 1 1 auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.vcenter {
+    justify-content: center;
+}
+
+.hcenter {
+    align-items: center;
+}
+
+.baseline {
+    align-items: baseline;
+}
+
+.center {
+    align-items: center;
+    justify-content: center;
+}
+
+.sideBar {
+    min-width: 40px;
+    max-width: 40px;
+    font-size: 150%;
+    color: lightgrey;
+    background: black;
+}
+
+.hidden {
+    display: none;
+}
+
+.wrapper {
+    position: relative;
+}
+
+.content {
+    width: 100%;
+    height: 100%;
+    background: lightgray;
+}
+
+#infopanel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 270px;
+    height: 400px;
+    background: Gainsboro;
+    opacity: 0.9;
+    padding: 12px;
+    transform: translateX(-100%);
+}
+
+.slide-in {
+    animation: slide-in 0.5s forwards;
+    -webkit-animation: slide-in 0.5s forwards;
+}
+
+.slide-out {
+    animation: slide-out 0.5s forwards;
+    -webkit-animation: slide-out 0.5s forwards;
+}
+
+@keyframes slide-in {
+    100% {
+        transform: translateX(0%);
+    }
+}
+
+@-webkit-keyframes slide-in {
+    100% {
+        -webkit-transform: translateX(0%);
+    }
+}
+
+@keyframes slide-out {
+    0% {
+        transform: translateX(0%);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+@-webkit-keyframes slide-out {
+    0% {
+        -webkit-transform: translateX(0%);
+    }
+    100% {
+        -webkit-transform: translateX(-100%);
+    }
+}
+
+.menu-list {
+    margin: 12px auto;
+}
+
+.menu-item {
+    margin: 6px auto;
+}
+
+.menu-item a {
+    display: block;
+    cursor: pointer;
+    text-align: center;
+}
+
+.infotable {
+    width: 100%;
+}
+
+.infotable td {
+    padding: 5px 2px;
+}
+
+.infotable a {
+    cursor: pointer;
+    font-size: 70%;
+}
+
+.unit {
+    text-align: right;
+}
+
+.geocoder {
+    margin-bottom: 15px;
+}
+
+.mapboxgl-ctrl-geocoder--input {
+    height: 36px;
+}
+
+.number-input {
+    height: 22px;
+    width: 100px;
+    border-radius: 4px;
+    transition: width .25s, min-width .25s;
+    border: 0;
+    background-color: #fff;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    padding: 4px 6px;
+}
