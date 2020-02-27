@@ -177,6 +177,7 @@ a, a:visited {
     display: block;
     cursor: pointer;
     text-align: center;
+    color: lightcyan;
 }
 
 .infotable {

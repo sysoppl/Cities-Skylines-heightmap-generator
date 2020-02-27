@@ -30,9 +30,11 @@ For land located in mountains, this will usual be the minimum height of the squa
 ### Settings examples:
 - A square has a minimum height of 200 meters and a maximum height of 2200 meters (like the Alps), auto settings are calculated like this:  
 Sea level is set to 200 meters, Height scale to 50%, below sea level to 5 meters and all land is raised.
+By setting only land rise, and below sea level to 10, the land will raise 10 meters out of the sea. In the map editor from cities, the sea level can also be adjusted. Wen set to 9 meters, this gives a shoreline that is risen 1 meter out of the sea.
 
 - A square has a minimum height of 0 meters and a maximum of 350 meters (like San Francisco), auto settings are calculated like this:  
 Sea level is set to 0 meters, Height scale to 300%, below sea level to 20 meters and only land is raised.
+
 
 
 ## Planned enhancements
