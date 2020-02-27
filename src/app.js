@@ -435,7 +435,7 @@ function toCitiesmap(heightmap, xOffset, yOffset) {
             if (x < xOffset || x > 1081 + xOffset) continue;
 
             // scale the height, taking seaLevel and scale into account 
-            let height = Math.round((heightmap[y][x] / 10 - scope.seaLevel + scope.depth) / 0.015625 * parseFloat(scope.heightScale) / 100);
+            let height = Math.round((heightmap[y][x] / 10 - (scope.seaLevel - scope.depth)) / 0.015625 * parseFloat(scope.heightScale) / 100);
 
             // calculate index in image
             let index = (y - yOffset) * 1081 * 2 + (x - xOffset) * 2;
