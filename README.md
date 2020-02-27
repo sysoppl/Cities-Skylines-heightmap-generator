@@ -9,7 +9,7 @@ The goal is to get a accurate height map for Cities: Skyline.
 - Height resolution 0.1 meters (cities resolution = 0.015 meters at 1:1 scale).  
 - Easy to use interface.  
 - takes a 18 x 18 km square from a map.
-- Can produce png and raw images. Use **raw** for highest accuracy.
+- Can produce png and raw images. Use **raw** for highest accuracy. 
 
 ## Tools needed
 Visual studio code or the editor of your choice.
@@ -36,6 +36,9 @@ By setting only land rise, and below sea level to 10, the land will raise 10 met
 Sea level is set to 0 meters, Height scale to 300%, below sea level to 20 meters and only land is raised.
 
 
+## Frequently asked questions
+Q: when downloading the map Chrome says ```heightmap.raw is not commonly downloaded and may be dangerous```  
+A: just click on the arrow up and choose ```keep```. Heightmaps are not dangerous at al ;)
 
 ## Planned enhancements
 - Possible adjustment of the 18 x 18 km square for getting maps.
