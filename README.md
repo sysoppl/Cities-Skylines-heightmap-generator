@@ -27,11 +27,11 @@ For land located in mountains, this will usual be the minimum height of the squa
 
 - **rise only land**: the sea level is kept at 0 meters, but the land gets a extra rise. This creates the possibility of creating land that is risen a small amount out of the sea. When all is raised, it creates the possibility to create a lake, when land is not adjacent to the ocean. 
 
-### Example:
-- A square has a minimum height of 200 meters and a maximum of 2200 meters (like the Alps), auto settings a calculated like this:  
+### Settings examples:
+- A square has a minimum height of 200 meters and a maximum height of 2200 meters (like the Alps), auto settings are calculated like this:  
 Sea level is set to 200 meters, Height scale to 50%, below sea level to 5 meters and all land is raised.
 
-- A square has a minimum height of 0 meters and a maximum of 350 meters (like San Francisco), auto settings a calculated like this:  
+- A square has a minimum height of 0 meters and a maximum of 350 meters (like San Francisco), auto settings are calculated like this:  
 Sea level is set to 0 meters, Height scale to 300%, below sea level to 20 meters and only land is raised.
 
 
