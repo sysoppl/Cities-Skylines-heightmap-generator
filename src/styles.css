@@ -206,7 +206,7 @@ a, a:visited {
 
 .number-input {
     height: 22px;
-    width: 100px;
+    width: 65px;
     border-radius: 4px;
     transition: width .25s, min-width .25s;
     border: 0;

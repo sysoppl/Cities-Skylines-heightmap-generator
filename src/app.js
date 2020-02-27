@@ -308,7 +308,8 @@ function getHeightmap(mode = 0) {
             let canvas, url;
             calcMinMaxHeight(heightmap, xOffset, yOffset);
             if (!scope.seaLevel) scope.seaLevel = Math.floor(grid.minHeight);
-            if (!scope.heightScale) scope.heightScale = (1024 / (grid.maxHeight - scope.seaLevel)).toFixed(1);
+            if (!scope.heightScale) scope.heightScale = (1024 / (grid.maxHeight - scope.seaLevel)).toFixed(2) * 100;
+            if (!scope.depth) scope.depth = 10;
             switch (mode) {
                 case 0:
                     let citiesmap = toCitiesmap(heightmap, xOffset, yOffset);
@@ -342,7 +343,8 @@ function getHeightmap(mode = 0) {
 function autoSettings() {
     getHeightmap(2);
     scope.seaLevel = Math.floor(grid.minHeight);
-    scope.heightScale = (1024 / (grid.maxHeight - scope.seaLevel)).toFixed(1);
+    scope.heightScale = (1024 / (grid.maxHeight - scope.seaLevel)).toFixed(2) * 100;
+    scope.depth = 10.0;
 }
 
 function isDownloadComplete(tiles) {
@@ -397,8 +399,6 @@ function heightmapToCanvas(heightmap, xOffset, yOffset) {
     const ctx = canvas.getContext('2d');
     let img = ctx.getImageData(0, 0, 1081, 1081);
 
-    console.log(scope.seaLevel, parseFloat(scope.heightScale));
-
     // iterate over the heightmap
     for (let y = 0; y < 2048; y++) {
         if (y < yOffset || y > 1081 + yOffset) continue;
@@ -406,7 +406,7 @@ function heightmapToCanvas(heightmap, xOffset, yOffset) {
             if (x < xOffset || x > 1081 + xOffset) continue;
 
             // scale the height, an integer in 0.1 meter resolution
-            let h = Math.min(255, Math.floor((heightmap[y][x] / 10 - scope.seaLevel) / 4 * parseFloat(scope.heightScale))); // to 4 meters resolution, max is 1023m.
+            let h = Math.min(255, Math.floor((heightmap[y][x] / 10 - scope.seaLevel) / 4 * parseFloat(scope.heightScale) / 100)); // to 4 meters resolution, max is 1023m.
 
             // calculate index in image
             let index = (y - yOffset) * 1081 * 4 + (x - xOffset) * 4;
@@ -435,7 +435,7 @@ function toCitiesmap(heightmap, xOffset, yOffset) {
             if (x < xOffset || x > 1081 + xOffset) continue;
 
             // scale the height, taking seaLevel and scale into account 
-            let height = Math.round((heightmap[y][x] / 10 - scope.seaLevel) / 0.015625 * parseFloat(scope.heightScale));
+            let height = Math.round((heightmap[y][x] / 10 - scope.seaLevel + scope.depth) / 0.015625 * parseFloat(scope.heightScale) / 100);
 
             // calculate index in image
             let index = (y - yOffset) * 1081 * 2 + (x - xOffset) * 2;
