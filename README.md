@@ -46,3 +46,7 @@ A: just click on the arrow up and choose ```keep```. Height maps are not dangero
 
 ## final notes
 - displaying debug info is achieved by adding ```?debug=1``` to the url. A ```png``` map is added, as well as a heatmap and a rectangle of the tiles that are downloaded.
+- due to the nature of mother earth (it is a cube), it is not possible to achive 100%  accuracy near the poles. However, the center square is always at the correct position.
+
+![Golden gate](/images/goldengate.jpg)
+San Francisco, where the Golden Gate bridge will be build. Scale 100%, sea level rise 5 meter.
