@@ -3,7 +3,7 @@
 
 <head>
     <meta charset='utf-8' />
-    <title>Cities map generator</title>
+    <title>Cities: Skylines map generator</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -32,7 +32,7 @@
             <li class="menu-item"><a onclick="getHeightmap()" title="download raw height map"><i
                         class="fa fa-cloud-download-alt"></i></a>
             </li>
-            <li class="menu-item"><a onclick="getHeightmap(1)" title="download image height map"><i
+            <li class="menu-item debug"><a onclick="getHeightmap(1)" title="download image height map"><i
                         class="fa fa-download"></i></a>
             </li>
         </ul>
@@ -43,7 +43,7 @@
         <ul class="menu-list">
             <li class="menu-item"><a href="https://github.com/JBerg60/cities-heightmap" target="_blank" title="help"><i
                         class="far fa-question-circle"></i></a></li>
-            <li class="menu-item"><a href="#" onclick="getHeightmap(255)" title="download tiles map"><i
+            <li class="menu-item debug"><a href="#" onclick="getHeightmap(255)" title="download tiles map"><i
                         class="fa fa-bug"></i></a>
             </li>
         </ul>
@@ -71,7 +71,6 @@
                         <td>min. height:</td>
                         <td class="unit" id="minh"></td>
                         <td>mtr.</td>
-                        <td><a onclick="getHeightmap(2)"><i class="fa fa-sync-alt"></i></a></td>
                     </tr>
                     <tr>
                         <td>max. height:</td>
@@ -88,7 +87,6 @@
                         <td>sea level:</td>
                         <td><input data-model="seaLevel" class="number-input" type="number"></td>
                         <td>mtr.</td>
-                        <td><a onclick="autoSettings()"><i class="fa fa-cog"></i></a></td>
                     </tr>
                     <tr>
                         <td>height scale:</td>
@@ -102,17 +100,17 @@
                         <td>mtr.</td>
                     </tr>
                     <tr>
-                        <td>only rise land:</td>
+                        <td>only raise land:</td>
                         <td><input class="number-input" type="checkbox" id="landOnly"></td>
                     </tr>
                 </tbody>
             </table>
-            <!--
-            <div>
-                <p data-binding="seaLevel">test</p>
-                <span data-binding="heightScale">xx</span>
+            <hr />
+            <div class="row">
+                <p class="fill"></p>
+                <button onclick="getHeightmap(2)"><i class="fa fa-sync-alt"></i>&nbsp;&nbsp;Refresh</button>
+                <button onclick="autoSettings()"><i class="fa fa-cog"></i>&nbsp;&nbsp;Auto settings</button>
             </div>
-            -->
         </div>
     </div>
 

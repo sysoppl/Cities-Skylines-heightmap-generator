@@ -1,6 +1,11 @@
 'use strict'
 
 var grid = loadSettings();
+let debug = !!new URL(window.location.href).searchParams.get("debug");
+let debugElements = document.getElementsByClassName("debug");
+if (debug) while (debugElements.length > 0) {
+    debugElements[0].classList.remove('debug');
+}
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9obmJlcmciLCJhIjoiY2s2d3FwdTJpMDJnejNtbzBtb2ljbXZiYyJ9.yRKViKWpsMTtE-NPesWZvA';
 
@@ -54,24 +59,25 @@ map.on('load', function () {
     });
 
     // debug: area that is downloaded
-    map.addSource('debug', {
-        'type': 'geojson',
-        'data': turf.squareGrid([0, 0, 0, 0], 2, { units: 'kilometers' })
-    });
+    if (debug) {
+        map.addSource('debug', {
+            'type': 'geojson',
+            'data': turf.squareGrid([0, 0, 0, 0], 2, { units: 'kilometers' })
+        });
 
-    map.addLayer({
-        'id': 'debugLayer',
-        'type': 'line',
-        'source': 'debug',
-        'paint': {
-            'line-color': '#bdb76b',
-            'line-width': 0.5
-        },
-        'layout': {
-            'visibility': 'none'
-        },
-    });
-
+        map.addLayer({
+            'id': 'debugLayer',
+            'type': 'line',
+            'source': 'debug',
+            'paint': {
+                'line-color': 'orangered',
+                'line-width': 0.5
+            },
+            'layout': {
+                'visibility': 'none'
+            },
+        });
+    }
 
     map.on('mouseenter', 'startsquare', function () {
         map.setPaintProperty('startsquare', 'fill-opacity', 0.15);
@@ -156,19 +162,19 @@ function onUp(e) {
 }
 
 function hideDebugLayer() {
-    map.setLayoutProperty('debugLayer', 'visibility', 'none');
+    if (debug) map.setLayoutProperty('debugLayer', 'visibility', 'none');
     grid.minHeight = null;
     grid.maxHeight = null;
 }
 
 function setGrid(lng, lat, size) {
-    map.getSource('grid').setData(getGrid(lng, lat, size));
+    map.getSource('grid').setData(getGrid(lng, lat, size - 0.1));
     map.getSource('start').setData(getGrid(lng, lat, size / 9));
     grid.zoom = map.getZoom();
 }
 
 function getExtent(lng, lat, size = 18) {
-    let dist = Math.sqrt(2 * Math.pow(size / 2, 2)) + 0.1;
+    let dist = Math.sqrt(2 * Math.pow(size / 2, 2));
     let point = turf.point([lng, lat]);
     let topleft = turf.destination(point, dist, -45, { units: 'kilometers' }).geometry.coordinates;
     let bottomright = turf.destination(point, dist, 135, { units: 'kilometers' }).geometry.coordinates;
@@ -177,7 +183,7 @@ function getExtent(lng, lat, size = 18) {
 
 function getGrid(lng, lat, size) {
     let extent = getExtent(lng, lat, size);
-    return turf.squareGrid([extent.topleft[0], extent.topleft[1], extent.bottomright[0], extent.bottomright[1]], 2, { units: 'kilometers' });
+    return turf.squareGrid([extent.topleft[0], extent.topleft[1], extent.bottomright[0], extent.bottomright[1]], 2 - 0.02, { units: 'kilometers' });
 }
 
 function loadSettings() {
@@ -253,11 +259,10 @@ function zoomOut() {
 
 function getHeightmap(mode = 0) {
     saveSettings(false);
-    map.setLayoutProperty('debugLayer', 'visibility', 'visible');
 
     let extent = getExtent(grid.lng, grid.lat, 18);
 
-    let zoom = 12; //1 pixel = 9.5 m
+    let zoom = 12; //1 pixel = ?? m
 
     // find covering tile of top left
     let x = long2tile(extent.topleft[0], zoom);
@@ -270,21 +275,26 @@ function getHeightmap(mode = 0) {
     let tileLng2 = tile2long(x + 4, zoom);
     let tileLat2 = tile2lat(y + 4, zoom);
 
-    // debug: find size of the tiles
-    let distance = turf.distance(turf.point([tileLng, tileLat]), turf.point([tileLng, tileLat2]), { units: 'kilometers' }) - 0.4;
-    // debug: update the download area
-    let debugGrid = turf.squareGrid([tileLng, tileLat, tileLng2, tileLat2], distance / 4, { units: 'kilometers' });
-    map.getSource('debug').setData(debugGrid);
+    // find size of the tiles. different depending on the longitude
+    let distance = turf.distance(turf.point([tileLng, tileLat]), turf.point([tileLng, tileLat2]), { units: 'kilometers' });
 
-    // find out position of the area we want inside the tiles
-    let topDistance = turf.distance(turf.point([tileLng, tileLat]), turf.point([tileLng, extent.topleft[1]]), { units: 'kilometers' });
-    let leftDistance = turf.distance(turf.point([tileLng, tileLat]), turf.point([extent.topleft[0], tileLat]), { units: 'kilometers' });
+    // find out the center position of the area we want inside the tiles
+    let topDistance = turf.distance(turf.point([tileLng, tileLat]), turf.point([tileLng, grid.lat]), { units: 'kilometers' });
+    let leftDistance = turf.distance(turf.point([tileLng, tileLat]), turf.point([grid.lng, tileLat]), { units: 'kilometers' });
 
-    let xOffset = Math.floor(leftDistance / distance * 2048);
-    let yOffset = Math.floor(topDistance / distance * 2048);
+    // calulate the x and y offset, relative to the center of the map
+    let xOffset = Math.floor(leftDistance / distance * 2048) - Math.floor(1081 / 2);
+    let yOffset = Math.floor(topDistance / distance * 2048) - Math.floor(1081 / 2);
 
     // create 4 x 4 empty array
     let tiles = Create2DArray(4);
+
+    // debug: update the download area
+    if (debug) {
+        map.setLayoutProperty('debugLayer', 'visibility', 'visible');
+        let debugGrid = turf.squareGrid([tileLng, tileLat, tileLng2, tileLat2], distance / 4 - 0.05, { units: 'kilometers' });
+        map.getSource('debug').setData(debugGrid);
+    }
 
     // download the tiles
     for (let i = 0; i < 4; i++) {
@@ -320,7 +330,7 @@ function getHeightmap(mode = 0) {
                     download('heightmap.raw', citiesmap);
                     break;
                 case 1:
-                    canvas = heightmapToCanvas(heightmap, xOffset, yOffset);
+                    canvas = heightmaptilesToCanvas(heightmap, xOffset, yOffset);
                     url = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
                     download('heightmap.png', null, url);
                     break;
@@ -328,7 +338,7 @@ function getHeightmap(mode = 0) {
                     updateInfopanel();
                     break;
                 case 255:
-                    canvas = toCanvas(tiles);
+                    canvas = tilesToCanvas(tiles);
                     url = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
                     download('tiles.png', null, url);
                     break;
@@ -347,7 +357,7 @@ function getHeightmap(mode = 0) {
 function autoSettings(withMap = true) {
     if (withMap) getHeightmap(2);
     scope.seaLevel = Math.floor(grid.minHeight);
-    scope.heightScale = (1024 / (grid.maxHeight - scope.seaLevel)).toFixed(2) * 100;
+    scope.heightScale = Math.min(250, Math.floor(1024 / (grid.maxHeight - scope.seaLevel) * 100));
     scope.depth = 5.0;
     document.getElementById('landOnly').checked = scope.seaLevel === 0;
 }
@@ -378,7 +388,7 @@ function toHeightmap(tiles) {
     return heightmap;
 }
 
-function toCanvas(tiles) {
+function tilesToCanvas(tiles) {
     let canvas = document.createElement("canvas");
     canvas.width = 2048;
     canvas.height = 2048;
@@ -396,7 +406,7 @@ function toCanvas(tiles) {
     return canvas;
 }
 
-function heightmapToCanvas(heightmap, xOffset, yOffset) {
+function heightmaptilesToCanvas(heightmap, xOffset, yOffset) {
     let canvas = document.createElement("canvas");
     canvas.width = 1081;
     canvas.height = 1081;
@@ -416,7 +426,7 @@ function heightmapToCanvas(heightmap, xOffset, yOffset) {
 
             // we are here at meters scale
             if (document.getElementById('landOnly').checked) {
-                if (h > 2) h = h + scope.depth / 4;
+                if (h > 0) h = h + scope.depth / 4;
             } else {
                 h = h + scope.depth / 4;
             }
@@ -431,6 +441,22 @@ function heightmapToCanvas(heightmap, xOffset, yOffset) {
             img.data[index + 1] = h;    // green
             img.data[index + 2] = h;    // blue
             img.data[index + 3] = 255;  //alpha, 255 is full opaque
+        }
+    }
+
+    // draw a grid on the image    
+    for (let y = 1; y < 1081; y++) {
+        for (let x = 1; x < 1081; x++) {
+
+            if (y % 120 == 0 || x % 120 == 0) {
+                // calculate index in image
+                let index = y * 1081 * 4 + x * 4;
+
+                // create pixel
+                img.data[index + 0] = 63;
+                img.data[index + 1] = 63;
+                img.data[index + 2] = 63;
+            }
         }
     }
 
@@ -455,7 +481,7 @@ function toCitiesmap(heightmap, xOffset, yOffset) {
             // we are here at cities scale: 0xFFFF = 65535 => 1024 meters
             let depthUnits = scope.depth / 0.015625;
             if (document.getElementById('landOnly').checked) {
-                if (height > 1) height = height + depthUnits;
+                if (height > 3) height = height + depthUnits;
             } else {
                 height = height + depthUnits;
             }

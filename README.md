@@ -38,10 +38,11 @@ Sea level is set to 0 meters, Height scale to 300%, below sea level to 20 meters
 
 ## Frequently asked questions
 Q: when downloading the map Chrome says ```heightmap.raw is not commonly downloaded and may be dangerous```  
-A: just click on the arrow up and choose ```keep```. Heightmaps are not dangerous at al ;)
+A: just click on the arrow up and choose ```keep```. Height maps are not dangerous at al ;)
 
 ## Planned enhancements
 - Possible adjustment of the 18 x 18 km square for getting maps.
 
 
 ## final notes
+- displaying debug info is achieved by adding ```?debug=1``` to the url. A ```png``` map is added, as well as a heatmap and a rectangle of the tiles that are downloaded.
