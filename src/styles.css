@@ -180,6 +180,10 @@ a, a:visited {
     color: lightcyan;
 }
 
+.menu-item a.active {
+    color: cyan;
+}
+
 .infotable {
     width: 100%;
 }

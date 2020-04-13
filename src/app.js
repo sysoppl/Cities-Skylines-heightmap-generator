@@ -1,8 +1,8 @@
 'use strict'
 
 var grid = loadSettings();
-let debug = !!new URL(window.location.href).searchParams.get("debug");
-let debugElements = document.getElementsByClassName("debug");
+let debug = !!new URL(window.location.href).searchParams.get('debug');
+let debugElements = document.getElementsByClassName('debug');
 if (debug) while (debugElements.length > 0) {
     debugElements[0].classList.remove('debug');
 }
@@ -12,6 +12,7 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoiam9obmJlcmciLCJhIjoiY2s2d3FwdTJpMDJnejNtbzBtb
 var map = new mapboxgl.Map({
     container: 'map', // Specify the container ID
     style: 'mapbox://styles/mapbox/outdoors-v11', // Specify which map style to use
+    //style: 'mapbox://styles/mapbox/streets-v11', // Specify which map style to use
     center: [grid.lng, grid.lat], // Specify the starting position [lng, lat]
     zoom: grid.zoom // Specify the starting zoom
 });
@@ -57,6 +58,44 @@ map.on('load', function () {
             'fill-opacity': 1
         }
     });
+
+    map.addSource('mapbox-streets', {
+        type: 'vector',
+        url: 'mapbox://mapbox.mapbox-streets-v8'
+    });
+
+    map.addSource('contours', {
+        type: 'vector',
+        url: 'mapbox://mapbox.mapbox-terrain-v2'
+    });
+
+    map.addLayer({
+        'id': 'contours',
+        'type': 'line',
+        'source': 'contours',
+        'source-layer': 'contour',
+        'layout': {
+            'visibility': 'visible',
+            'line-join': 'round',
+            'line-cap': 'round'
+        },
+        'paint': {
+            'line-color': '#877b59',
+            'line-width': 0.25
+        }
+    });
+
+    map.addLayer({
+        'id': 'water-streets',
+        'source': 'mapbox-streets',
+        'source-layer': 'water',
+        'type': 'fill',
+        'paint': {
+            'fill-color': 'rgba(66,100,225, 0.3)',
+            'fill-outline-color': 'rgba(33,33,255, 1)'
+        }
+    });
+
 
     // debug: area that is downloaded
     if (debug) {
@@ -113,6 +152,8 @@ map.on('load', function () {
         map.once('touchend', onUp);
     });
 
+    showWaterLayer();
+    showHeightLayer();
 });
 
 map.on('click', function (e) {
@@ -161,6 +202,42 @@ function onUp(e) {
     updateInfopanel();
 }
 
+function showHeightContours(el) {
+    grid.heightContours = !grid.heightContours;
+    if (grid.heightContours) {
+        el.classList.add('active');
+    } else {
+        el.classList.remove('active');
+    }
+    showHeightLayer();
+}
+
+function showHeightLayer() {
+    if (grid.heightContours) {
+        map.setLayoutProperty('contours', 'visibility', 'visible');
+    } else {
+        map.setLayoutProperty('contours', 'visibility', 'none');
+    }
+}
+
+function showWaterContours(el) {
+    grid.waterContours = !grid.waterContours;
+    if (grid.waterContours) {
+        el.classList.add('active');
+    } else {
+        el.classList.remove('active');
+    }
+    showWaterLayer();
+}
+
+function showWaterLayer() {
+    if (grid.waterContours) {
+        map.setLayoutProperty('water-streets', 'visibility', 'visible');
+    } else {
+        map.setLayoutProperty('water-streets', 'visibility', 'none');
+    }
+}
+
 function hideDebugLayer() {
     if (debug) map.setLayoutProperty('debugLayer', 'visibility', 'none');
     grid.minHeight = null;
@@ -193,6 +270,8 @@ function loadSettings() {
     grid.zoom = parseFloat(grid.zoom) || 11.0;
     grid.minHeight = parseFloat(grid.minHeight) || 0;
     grid.maxHeight = parseFloat(grid.maxHeight) || 0;
+    grid.heightContours = grid.heightContours || false;
+    grid.waterContours = grid.waterContours || false;
     return grid;
 }
 
@@ -242,10 +321,10 @@ function calcMinMaxHeight(heightmap, xOffset, yOffset) {
 }
 
 function updateInfopanel() {
-    document.getElementById("lng").innerHTML = grid.lng.toFixed(5);
-    document.getElementById("lat").innerHTML = grid.lat.toFixed(5);
-    document.getElementById("minh").innerHTML = grid.minHeight;
-    document.getElementById("maxh").innerHTML = grid.maxHeight;
+    document.getElementById('lng').innerHTML = grid.lng.toFixed(5);
+    document.getElementById('lat').innerHTML = grid.lat.toFixed(5);
+    document.getElementById('minh').innerHTML = grid.minHeight;
+    document.getElementById('maxh').innerHTML = grid.maxHeight;
 }
 
 
@@ -331,7 +410,7 @@ function getHeightmap(mode = 0) {
                     break;
                 case 1:
                     canvas = heightmaptilesToCanvas(heightmap, xOffset, yOffset);
-                    url = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+                    url = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
                     download('heightmap.png', null, url);
                     break;
                 case 2:
@@ -339,7 +418,7 @@ function getHeightmap(mode = 0) {
                     break;
                 case 255:
                     canvas = tilesToCanvas(tiles);
-                    url = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+                    url = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
                     download('tiles.png', null, url);
                     break;
             }
@@ -357,9 +436,10 @@ function getHeightmap(mode = 0) {
 function autoSettings(withMap = true) {
     if (withMap) getHeightmap(2);
     scope.seaLevel = Math.floor(grid.minHeight);
-    scope.heightScale = Math.min(250, Math.floor(1024 / (grid.maxHeight - scope.seaLevel) * 100));
     scope.depth = 5.0;
+    scope.heightScale = Math.min(250, Math.floor((1024 - scope.depth) / (grid.maxHeight - scope.seaLevel) * 100));
     document.getElementById('landOnly').checked = scope.seaLevel === 0;
+    console.log(map.getStyle().layers);
 }
 
 function isDownloadComplete(tiles) {
@@ -389,7 +469,7 @@ function toHeightmap(tiles) {
 }
 
 function tilesToCanvas(tiles) {
-    let canvas = document.createElement("canvas");
+    let canvas = document.createElement('canvas');
     canvas.width = 2048;
     canvas.height = 2048;
 
@@ -407,7 +487,7 @@ function tilesToCanvas(tiles) {
 }
 
 function heightmaptilesToCanvas(heightmap, xOffset, yOffset) {
-    let canvas = document.createElement("canvas");
+    let canvas = document.createElement('canvas');
     canvas.width = 1081;
     canvas.height = 1081;
 
@@ -469,6 +549,12 @@ function toCitiesmap(heightmap, xOffset, yOffset) {
     // cities has L/H byte order
     let citiesmap = new Uint8ClampedArray(2 * 1081 * 1081);
 
+    // set the height tolerance. dependant if adjacent to sea or ocean
+    let heightTolerance = grid.minHeight == 0 ? 0 : 0.1;
+    heightTolerance = heightTolerance / 0.015625; // to cities units
+
+    let depthUnits = scope.depth / 0.015625;
+
     // iterate over the heightmap
     for (let y = 0; y < 2048; y++) {
         if (y < yOffset || y > 1081 + yOffset) continue;
@@ -479,12 +565,15 @@ function toCitiesmap(heightmap, xOffset, yOffset) {
             let height = Math.round((heightmap[y][x] / 10 - scope.seaLevel) / 0.015625 * parseFloat(scope.heightScale) / 100);
 
             // we are here at cities scale: 0xFFFF = 65535 => 1024 meters
-            let depthUnits = scope.depth / 0.015625;
             if (document.getElementById('landOnly').checked) {
-                if (height > 3) height = height + depthUnits;
+                if (height > heightTolerance) height = height + depthUnits;
             } else {
+                // raise the entire map
                 height = height + depthUnits;
             }
+
+            // make sure water always flows to the west
+            //height = height + (1081 - x - xOffset);
 
             if (height > 65535) height = 65535;
 
@@ -502,6 +591,11 @@ function toCitiesmap(heightmap, xOffset, yOffset) {
     citiesmap[1] = 255;
     citiesmap[2] = 0;
     citiesmap[3] = 0;
+
+    // log the correct bounding rect to the console
+    let bounds = getExtent(grid.lng, grid.lat, 18);
+    console.log(bounds.topleft[0], bounds.topleft[1], bounds.bottomright[0], bounds.bottomright[1]);
+
 
     return citiesmap;
 }
