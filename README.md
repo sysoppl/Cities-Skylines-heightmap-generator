@@ -1,6 +1,9 @@
+# This is a fork of original heightmap builder (JBerg60/cities-heightmap)
+# Working URL: https://cs.heightmap.skydark.pl
+
 # Cities: Skyline height map generator
 A accurate heightmap generator for Cities: Skylines.  
-Application: https://cities.heightmap.space
+Application: https://cs.heightmap.skydark.pl
 
 ## Objective
 The goal is to get a accurate height map for Cities: Skyline. 
