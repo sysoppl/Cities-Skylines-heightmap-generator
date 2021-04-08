@@ -1,18 +1,20 @@
-# This is a fork of original heightmap builder (JBerg60/cities-heightmap)
-# Working URL: https://cs.heightmap.skydark.pl
+*This is a fork of original heightmap builder (JBerg60/cities-heightmap)*
 
-# Cities: Skyline height map generator
-A accurate heightmap generator for Cities: Skylines.  
-Application: https://cs.heightmap.skydark.pl
-
+# Cities: Skylines online heightmap generator
+Online heightmap generator for Cities: Skylines
+**Check it: https://cs.heightmap.skydark.pl**
+ ---
+ 
+ 
+*Original text by original author below*
 ## Objective
-The goal is to get a accurate height map for Cities: Skyline. 
+The goal is to get a accurate height map for Cities: Skylines
 
-## Current features
-- Height resolution 0.1 meters (cities resolution = 0.015 meters at 1:1 scale).  
-- Easy to use interface.  
-- takes a 18 x 18 km square from a map.
-- Can produce png and raw images. Use **raw** for highest accuracy. 
+## Features
+- height resolution 0.1 meters (cities resolution = 0.015 meters at 1:1 scale)
+- easy to use interface
+- takes a 18 x 18 km square from a map
+- can produce png and raw images (use raw for highest accuracy)
 
 ## Tools needed
 Visual studio code or the editor of your choice.
@@ -47,9 +49,7 @@ A: just click on the arrow up and choose ```keep```. Height maps are not dangero
 - Possible adjustment of the 18 x 18 km square for getting maps.
 
 
-## final notes
+## Final notes
 - displaying debug info is achieved by adding ```?debug=1``` to the url. A ```png``` map is added, as well as a heatmap and a rectangle of the tiles that are downloaded.
 - due to the nature of mother earth (it is a cube), it is not possible to achive 100%  accuracy near the poles. However, the center square is always at the correct position.
 
-![Golden gate](/images/goldengate.jpg)
-San Francisco, where the Golden Gate bridge will be build. Scale 100%, sea level rise 5 meter.
