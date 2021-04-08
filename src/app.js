@@ -6,7 +6,7 @@ let debugElements = document.getElementsByClassName('debug');
 if (debug) while (debugElements.length > 0) {
     debugElements[0].classList.remove('debug');
 }
-
+// This token is created by original repo owner. For now no need to change it (until it works).
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9obmJlcmciLCJhIjoiY2s2d3FwdTJpMDJnejNtbzBtb2ljbXZiYyJ9.yRKViKWpsMTtE-NPesWZvA';
 
 var map = new mapboxgl.Map({
