@@ -2,6 +2,7 @@
 
 var grid = loadSettings();
 let debug = !!new URL(window.location.href).searchParams.get('debug');
+let nogrid = !!new URL(window.location.href).searchParams.get('nogrid');
 let debugElements = document.getElementsByClassName('debug');
 if (debug) while (debugElements.length > 0) {
     debugElements[0].classList.remove('debug');
@@ -523,19 +524,21 @@ function heightmaptilesToCanvas(heightmap, xOffset, yOffset) {
             img.data[index + 3] = 255;  //alpha, 255 is full opaque
         }
     }
+    
+    if (nogrid == false) { 
+        // draw a grid on the image
+        for (let y = 1; y < 1081; y++) {
+            for (let x = 1; x < 1081; x++) {
 
-    // draw a grid on the image    
-    for (let y = 1; y < 1081; y++) {
-        for (let x = 1; x < 1081; x++) {
+                if (y % 120 == 0 || x % 120 == 0) {
+                    // calculate index in image
+                    let index = y * 1081 * 4 + x * 4;
 
-            if (y % 120 == 0 || x % 120 == 0) {
-                // calculate index in image
-                let index = y * 1081 * 4 + x * 4;
-
-                // create pixel
-                img.data[index + 0] = 63;
-                img.data[index + 1] = 63;
-                img.data[index + 2] = 63;
+                    // create pixel
+                    img.data[index + 0] = 63;
+                    img.data[index + 1] = 63;
+                    img.data[index + 2] = 63;
+                }
             }
         }
     }
