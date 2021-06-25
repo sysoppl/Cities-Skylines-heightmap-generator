@@ -35,7 +35,7 @@
             <li class="menu-item"><a onclick="getHeightmap()" title="Download RAW height map"><i
                         class="fa fa-cloud-download-alt"></i></a>
             </li>
-            <li class="menu-item"><a onclick="getHeightmap(1)" title="Download PNG height map WITH grid"><i
+            <li class="menu-item"><a onclick="getHeightmap(1)" title="Download PNG height map (set grid on/off in options)"><i
                         class="fa fa-download"></i></a>
             </li>
         </ul>
@@ -113,6 +113,10 @@
                     <tr>
                         <td>Only raise land:</td>
                         <td><input class="number-input" type="checkbox" id="landOnly"></td>
+                    </tr>
+                    <tr>
+                        <td>Draw grid on PNG:</td>
+                        <td><input class="number-input" type="checkbox" id="drawGrid"></td>
                     </tr>
                 </tbody>
             </table>

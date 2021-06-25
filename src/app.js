@@ -2,7 +2,6 @@
 
 var grid = loadSettings();
 let debug = !!new URL(window.location.href).searchParams.get('debug');
-let nogrid = !!new URL(window.location.href).searchParams.get('nogrid');
 let debugElements = document.getElementsByClassName('debug');
 if (debug) while (debugElements.length > 0) {
     debugElements[0].classList.remove('debug');
@@ -525,7 +524,7 @@ function heightmaptilesToCanvas(heightmap, xOffset, yOffset) {
         }
     }
     
-    if (nogrid == false) { 
+    if (document.getElementById('drawGrid').checked) { 
         // draw a grid on the image
         for (let y = 1; y < 1081; y++) {
             for (let x = 1; x < 1081; x++) {
