@@ -17,9 +17,23 @@ The goal is to get a accurate height map for Cities: Skylines
 - can produce png and raw images (use raw for highest accuracy)
 
 ## How to
-- If you want to download RAW file, just download as you enter the website.
-- If you want to download PNG file, you need to add ?debug=1 to your URL ( https://cs.heightmap.skydark.pl/?debug=1 )
-- If you want to download PNG file without grid, you need to add ?debug=1&nogrid=1 to your URL ( https://cs.heightmap.skydark.pl/?debug=1&nogrid=1 )
+1. Select area that you want to download
+
+![obraz](https://user-images.githubusercontent.com/30871217/123449245-c4b9d800-d5db-11eb-966c-5424c82813bd.png)
+
+
+2. Choose the options that suit you 
+ 
+![obraz](https://user-images.githubusercontent.com/30871217/123449129-aa7ffa00-d5db-11eb-9eb5-f2395dc4f173.png)
+
+3. If you want to download RAW file, use top download button
+
+![obraz](https://user-images.githubusercontent.com/30871217/123448452-380f1a00-d5db-11eb-9a9d-776d61c75d67.png)
+
+OR if you want to download PNG file, use bottom download button. Also, set grid ON / OFF in settings
+
+![obraz](https://user-images.githubusercontent.com/30871217/123448562-5543e880-d5db-11eb-89ed-17043a40460b.png)
+
 
 ## Tools needed
 Visual studio code or the editor of your choice.
