@@ -16,6 +16,11 @@ The goal is to get a accurate height map for Cities: Skylines
 - takes a 18 x 18 km square from a map
 - can produce png and raw images (use raw for highest accuracy)
 
+## How to
+- If you want to download RAW file, just download as you enter the website.
+- If you want to download PNG file, you need to add ?debug=1 to your URL ( https://cs.heightmap.skydark.pl/?debug=1 )
+- If you want to download PNG file without grid, you need to add ?debug=1&nogrid=1 to your URL ( https://cs.heightmap.skydark.pl/?debug=1&nogrid=1 )
+
 ## Tools needed
 Visual studio code or the editor of your choice.
 
