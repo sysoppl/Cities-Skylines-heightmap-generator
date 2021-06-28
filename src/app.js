@@ -35,11 +35,28 @@ map.on('load', function () {
 
     map.addLayer({
         'id': 'gridlines',
-        'type': 'line',
+        'type': 'fill',
         'source': 'grid',
         'paint': {
-            'line-color': 'gray',
-            'line-width': 0.35
+            'fill-color': 'gray',
+            'fill-outline-color': 'gray',
+            'fill-opacity': 0.25
+        }
+    });
+
+    map.addSource('playable', {
+        'type': 'geojson',
+        'data': getGrid(grid.lng, grid.lat, 10)
+    });
+
+    map.addLayer({
+        'id': 'playablesquare',
+        'type': 'fill',
+        'source': 'playable',
+        'paint': {
+            'fill-color': 'green',
+            'fill-outline-color': 'green',
+            'fill-opacity': 0.3
         }
     });
 
@@ -53,9 +70,9 @@ map.on('load', function () {
         'type': 'fill',
         'source': 'start',
         'paint': {
-            'fill-color': 'transparent',
+            'fill-color': 'blue',
             'fill-outline-color': 'blue',
-            'fill-opacity': 1
+            'fill-opacity': 0.1
         }
     });
 
@@ -119,15 +136,15 @@ map.on('load', function () {
     }
 
     map.on('mouseenter', 'startsquare', function () {
-        map.setPaintProperty('startsquare', 'fill-opacity', 0.15);
-        map.setPaintProperty('startsquare', 'fill-color', 'gray');
+        map.setPaintProperty('startsquare', 'fill-opacity', 0.3);
+        map.setPaintProperty('startsquare', 'fill-color', 'blue');
         canvas.style.cursor = 'move';
         hideDebugLayer()
     });
 
     map.on('mouseleave', 'startsquare', function () {
-        map.setPaintProperty('startsquare', 'fill-color', 'transparent');
-        map.setPaintProperty('startsquare', 'fill-opacity', 1);
+        map.setPaintProperty('startsquare', 'fill-color', 'blue');
+        map.setPaintProperty('startsquare', 'fill-opacity', 0.1);
         canvas.style.cursor = '';
         saveSettings();
     });
@@ -247,6 +264,7 @@ function hideDebugLayer() {
 function setGrid(lng, lat, size) {
     map.getSource('grid').setData(getGrid(lng, lat, size - 0.1));
     map.getSource('start').setData(getGrid(lng, lat, size / 9));
+    map.getSource('playable').setData(getGrid(lng, lat, size - 8));
     grid.zoom = map.getZoom();
 }
 
