@@ -19,7 +19,8 @@ The goal is to get a accurate height map for Cities: Skylines
 ## How to
 1. Select area that you want to download
 
-![obraz](https://user-images.githubusercontent.com/30871217/123449245-c4b9d800-d5db-11eb-966c-5424c82813bd.png)
+![obraz](https://user-images.githubusercontent.com/30871217/123680703-4ebaa880-d849-11eb-8b74-b254e91ef44d.png)
+Green zone shows playable tiles
 
 
 2. Choose the options that suit you 
