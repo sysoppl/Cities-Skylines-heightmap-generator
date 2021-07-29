@@ -1,5 +1,8 @@
 'use strict'
 
+const vmapSize = 18;
+const mapSize = 17.28;
+const tileSize = 1.92;
 var grid = loadSettings();
 let debug = !!new URL(window.location.href).searchParams.get('debug');
 let debugElements = document.getElementsByClassName('debug');
@@ -30,7 +33,7 @@ map.on('load', function () {
 
     map.addSource('grid', {
         'type': 'geojson',
-        'data': getGrid(grid.lng, grid.lat, 18)
+        'data': getGrid(grid.lng, grid.lat, vmapSize)
     });
 
     map.addLayer({
@@ -46,7 +49,7 @@ map.on('load', function () {
 
     map.addSource('playable', {
         'type': 'geojson',
-        'data': getGrid(grid.lng, grid.lat, 10)
+        'data': getGrid(grid.lng, grid.lat, vmapSize / 9 * 5)
     });
 
     map.addLayer({
@@ -62,7 +65,7 @@ map.on('load', function () {
 
     map.addSource('start', {
         'type': 'geojson',
-        'data': getGrid(grid.lng, grid.lat, 2)
+        'data': getGrid(grid.lng, grid.lat, vmapSize / 9)
     });
 
     map.addLayer({
@@ -177,7 +180,7 @@ map.on('click', function (e) {
     grid.lng = e.lngLat.lng;
     grid.lat = e.lngLat.lat;
 
-    setGrid(grid.lng, grid.lat, 18);
+    setGrid(grid.lng, grid.lat, vmapSize);
     map.panTo(new mapboxgl.LngLat(grid.lng, grid.lat));
     saveSettings();
     hideDebugLayer();
@@ -192,7 +195,7 @@ geocoder.on('result', function (query) {
     grid.lng = query.result.center[0];
     grid.lat = query.result.center[1];
 
-    setGrid(grid.lng, grid.lat, 18);
+    setGrid(grid.lng, grid.lat, vmapSize);
     map.setZoom(10.2);
 
     saveSettings();
@@ -203,13 +206,13 @@ geocoder.on('result', function (query) {
 function onMove(e) {
     grid.lng = e.lngLat.lng;
     grid.lat = e.lngLat.lat;
-    setGrid(e.lngLat.lng, e.lngLat.lat, 18);
+    setGrid(e.lngLat.lng, e.lngLat.lat, vmapSize);
 }
 
 function onUp(e) {
     grid.lng = e.lngLat.lng;
     grid.lat = e.lngLat.lat;
-    setGrid(e.lngLat.lng, e.lngLat.lat, 18);
+    setGrid(e.lngLat.lng, e.lngLat.lat, vmapSize);
 
     // Unbind mouse/touch events
     map.off('mousemove', onMove);
@@ -262,13 +265,13 @@ function hideDebugLayer() {
 }
 
 function setGrid(lng, lat, size) {
-    map.getSource('grid').setData(getGrid(lng, lat, size - 0.1));
+    map.getSource('grid').setData(getGrid(lng, lat, size));
     map.getSource('start').setData(getGrid(lng, lat, size / 9));
-    map.getSource('playable').setData(getGrid(lng, lat, size - 8));
+    map.getSource('playable').setData(getGrid(lng, lat, size / 9 * 5));
     grid.zoom = map.getZoom();
 }
 
-function getExtent(lng, lat, size = 18) {
+function getExtent(lng, lat, size = vmapSize) {
     let dist = Math.sqrt(2 * Math.pow(size / 2, 2));
     let point = turf.point([lng, lat]);
     let topleft = turf.destination(point, dist, -45, { units: 'kilometers' }).geometry.coordinates;
@@ -278,7 +281,7 @@ function getExtent(lng, lat, size = 18) {
 
 function getGrid(lng, lat, size) {
     let extent = getExtent(lng, lat, size);
-    return turf.squareGrid([extent.topleft[0], extent.topleft[1], extent.bottomright[0], extent.bottomright[1]], 2 - 0.02, { units: 'kilometers' });
+    return turf.squareGrid([extent.topleft[0], extent.topleft[1], extent.bottomright[0], extent.bottomright[1]], tileSize, { units: 'kilometers' });
 }
 
 function loadSettings() {
