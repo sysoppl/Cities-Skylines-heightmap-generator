@@ -130,8 +130,8 @@ map.on('load', function () {
             'type': 'line',
             'source': 'debug',
             'paint': {
+                'line-color': 'orangered',
                 'line-width': 1
-                'line-width': 0.5
             },
             'layout': {
                 'visibility': 'none'
