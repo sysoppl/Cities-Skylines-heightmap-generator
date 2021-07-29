@@ -641,14 +641,11 @@ function toCitiesmap(heightmap, xOffset, yOffset) {
 
     let depthUnits = scope.depth / 0.015625;
 
-    // iterate over the heightmap
-    for (let y = 0; y < 2048; y++) {
-        if (y < yOffset || y > 1081 + yOffset) continue;
-        for (let x = 0; x < 2048; x++) {
-            if (x < xOffset || x > 1081 + xOffset) continue;
+    for (let y = 0; y < 1081; y++) {
+        for (let x = 0; x < 1081; x++) {    
 
             // scale the height, taking seaLevel and scale into account 
-            let height = Math.round((heightmap[y][x] / 10 - scope.seaLevel) / 0.015625 * parseFloat(scope.heightScale) / 100);
+            let height = Math.round((heightmap[y + yOffset][x + xOffset] / 10 - scope.seaLevel) / 0.015625 * parseFloat(scope.heightScale) / 100);
 
             // we are here at cities scale: 0xFFFF = 65535 => 1024 meters
             if (document.getElementById('landOnly').checked) {
@@ -659,12 +656,12 @@ function toCitiesmap(heightmap, xOffset, yOffset) {
             }
 
             // make sure water always flows to the west
-            //height = height + (1081 - x - xOffset);
+            // height = height + (1081 - x - xOffset);
 
             if (height > 65535) height = 65535;
 
             // calculate index in image
-            let index = (y - yOffset) * 1081 * 2 + (x - xOffset) * 2;
+            let index = y * 1081 * 2 + x * 2;
 
             // cities used hi/low 16 bit
             citiesmap[index + 0] = height >> 8;
@@ -679,9 +676,8 @@ function toCitiesmap(heightmap, xOffset, yOffset) {
     citiesmap[3] = 0;
 
     // log the correct bounding rect to the console
-    let bounds = getExtent(grid.lng, grid.lat, 18);
+    let bounds = getExtent(grid.lng, grid.lat, mapSize);
     console.log(bounds.topleft[0], bounds.topleft[1], bounds.bottomright[0], bounds.bottomright[1]);
-
 
     return citiesmap;
 }
