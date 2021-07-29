@@ -542,20 +542,32 @@ function toHeightmap(tiles, distance) {
     return heightmap;
 }
 
-function tilesToCanvas(tiles) {
+function toTerrainRGB(heightmap) {
     let canvas = document.createElement('canvas');
-    canvas.width = 2048;
-    canvas.height = 2048;
-
     const ctx = canvas.getContext('2d');
-    const data = ctx.createImageData(512, 512);
+    
+    canvas.width = heightmap.length;
+    canvas.height = heightmap.length;
 
-    for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
-            tiles[i][j].copyToImageData(data, tiles[i][j].decodePixels());
-            ctx.putImageData(data, i * 512, j * 512);
+    let img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+            let r = Math.floor((Math.floor((heightmap[y][x] + 100000) / 256)) / 256);
+            let g = (Math.floor((heightmap[y][x] + 100000) / 256)) % 256;
+            let b = (heightmap[y][x] + 100000) % 256;
+
+            let index = y * canvas.width * 4 + x * 4;
+
+            // create pixel
+            img.data[index + 0] = r;
+            img.data[index + 1] = g;
+            img.data[index + 2] = b;
+            img.data[index + 3] = 255;
         }
     }
+
+    ctx.putImageData(img, 0, 0);
 
     return canvas;
 }
