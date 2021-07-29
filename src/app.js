@@ -121,7 +121,8 @@ map.on('load', function () {
     if (debug) {
         map.addSource('debug', {
             'type': 'geojson',
-            'data': turf.squareGrid([0, 0, 0, 0], 2, { units: 'kilometers' })
+            // 'data': turf.squareGrid([0, 0, 0, 0], tileSize, { units: 'kilometers' })
+            'data': turf.bboxPolygon(turf.bbox(turf.lineString([0, 0], [0, 0])))
         });
 
         map.addLayer({
@@ -129,7 +130,7 @@ map.on('load', function () {
             'type': 'line',
             'source': 'debug',
             'paint': {
-                'line-color': 'orangered',
+                'line-width': 1
                 'line-width': 0.5
             },
             'layout': {
@@ -391,8 +392,8 @@ function getHeightmap(mode = 0) {
 
     // debug: update the download area
     if (debug) {
-        map.setLayoutProperty('debugLayer', 'visibility', 'visible');
-        let debugGrid = turf.squareGrid([tileLng, tileLat, tileLng2, tileLat2], distance / 4 - 0.05, { units: 'kilometers' });
+        let line = turf.lineString([[tileLng, tileLat], [tileLng2, tileLat2]]);  
+        map.getSource('debug').setData(turf.bboxPolygon(turf.bbox(line)));
         map.getSource('debug').setData(debugGrid);
     }
 
