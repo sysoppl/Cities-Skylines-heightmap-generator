@@ -3,7 +3,9 @@
 const vmapSize = 18;
 const mapSize = 17.28;
 const tileSize = 1.92;
+
 var grid = loadSettings();
+
 let debug = !!new URL(window.location.href).searchParams.get('debug');
 let debugElements = document.getElementsByClassName('debug');
 if (debug) while (debugElements.length > 0) {
@@ -115,7 +117,6 @@ map.on('load', function () {
             'fill-outline-color': 'rgba(33,33,255, 1)'
         }
     });
-
 
     // debug: area that is downloaded
     if (debug) {
@@ -347,7 +348,6 @@ function updateInfopanel() {
     document.getElementById('maxh').innerHTML = grid.maxHeight;
 }
 
-
 function zoomIn() {
     map.zoomIn();
 }
@@ -375,7 +375,7 @@ function getHeightmap(mode = 0) {
     let tileCnt = Math.max(x2 - x + 1, y2 - y + 1);
 
     let iCnt = tileCnt;
-    
+
     // fixed in high latitudes: adjusted the tile count to 6 or less
     // because Terrain-RGB tile is different in size at latitude
     // don't need too many tiles
@@ -395,7 +395,7 @@ function getHeightmap(mode = 0) {
         zoom = z;
         tileCnt = tc;
     }
-    
+
     let tileLng = tile2long(x, zoom);
     let tileLat = tile2lat(y, zoom);
 
@@ -414,7 +414,7 @@ function getHeightmap(mode = 0) {
 
     if (debug) {
         map.setLayoutProperty('debugLayer', 'visibility', 'visible');
-        let line = turf.lineString([[tileLng, tileLat], [tileLng2, tileLat2]]);  
+        let line = turf.lineString([[tileLng, tileLat], [tileLng2, tileLat2]]);
         map.getSource('debug').setData(turf.bboxPolygon(turf.bbox(line)));
     }
 
@@ -437,7 +437,7 @@ function getHeightmap(mode = 0) {
         if (isDownloadComplete(tiles)) {
             clearInterval(timer);
             let canvas, url;
-        
+
             // heightmap size corresponds to 1081px map size
             let heightmap = toHeightmap(tiles, distance);
 
@@ -523,10 +523,10 @@ function toHeightmap(tiles, distance) {
 
     // bilinear interpolation
     let hmIndex = Array(hmSize);
-    
-    for (let i = 0; i < hmSize; i++) {hmIndex[i] = i / r}   
+
+    for (let i = 0; i < hmSize; i++) {hmIndex[i] = i / r}
     for (let i = 0; i < (hmSize - 1); i++) {
-        for (let j = 0; j < (hmSize - 1); j++) {    
+        for (let j = 0; j < (hmSize - 1); j++) {
             let y0 = Math.floor(hmIndex[i]);
             let x0 = Math.floor(hmIndex[j]);
             let y1 = y0 + 1;
@@ -534,7 +534,7 @@ function toHeightmap(tiles, distance) {
             let dy = hmIndex[i] - y0;
             let dx = hmIndex[j] - x0;
             heightmap[i][j] = Math.round((1 - dx) * (1 - dy) * srcMap[y0][x0] + dx * (1 - dy) * srcMap[y0][x1] + (1 - dx) * dy * srcMap[y1][x0] + dx * dy * srcMap[y1][x1]);
-        }    
+        }
     }
     for (let i = 0; i < hmSize; i++) {heightmap[i][hmSize - 1] = srcMap[i][hmSize - 1]}
     for (let j = 0; j < hmSize; j++) {heightmap[hmSize - 1][j] = srcMap[hmSize - 1][j]}
@@ -545,7 +545,7 @@ function toHeightmap(tiles, distance) {
 function toTerrainRGB(heightmap) {
     let canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
+
     canvas.width = heightmap.length;
     canvas.height = heightmap.length;
 
@@ -582,7 +582,7 @@ function toCanvas(heightmap, xOffset, yOffset) {
 
     // iterate over the heightmap, ignore the sealevel rise (for now)
     for (let y = 0; y < 1081; y++) {
-        for (let x = 0; x < 1081; x++) {    
+        for (let x = 0; x < 1081; x++) {
 
             // scale the height, an integer in 0.1 meter resolution
             // to 4 meters resolution, max is 1023m.
@@ -608,7 +608,7 @@ function toCanvas(heightmap, xOffset, yOffset) {
         }
     }
 
-    if (document.getElementById('drawGrid').checked) { 
+    if (document.getElementById('drawGrid').checked) {
         // draw a grid on the image
         for (let y = 1; y < 1081; y++) {
             for (let x = 1; x < 1081; x++) {
@@ -642,9 +642,9 @@ function toCitiesmap(heightmap, xOffset, yOffset) {
     let depthUnits = scope.depth / 0.015625;
 
     for (let y = 0; y < 1081; y++) {
-        for (let x = 0; x < 1081; x++) {    
+        for (let x = 0; x < 1081; x++) {
 
-            // scale the height, taking seaLevel and scale into account 
+            // scale the height, taking seaLevel and scale into account
             let height = Math.round((heightmap[y + yOffset][x + xOffset] / 10 - scope.seaLevel) / 0.015625 * parseFloat(scope.heightScale) / 100);
 
             // we are here at cities scale: 0xFFFF = 65535 => 1024 meters
