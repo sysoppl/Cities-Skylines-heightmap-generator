@@ -572,7 +572,7 @@ function toTerrainRGB(heightmap) {
     return canvas;
 }
 
-function heightmaptilesToCanvas(heightmap, xOffset, yOffset) {
+function toCanvas(heightmap, xOffset, yOffset) {
     let canvas = document.createElement('canvas');
     canvas.width = 1081;
     canvas.height = 1081;
@@ -581,14 +581,12 @@ function heightmaptilesToCanvas(heightmap, xOffset, yOffset) {
     let img = ctx.getImageData(0, 0, 1081, 1081);
 
     // iterate over the heightmap, ignore the sealevel rise (for now)
-    for (let y = 0; y < 2048; y++) {
-        if (y < yOffset || y > 1081 + yOffset) continue;
-        for (let x = 0; x < 2048; x++) {
-            if (x < xOffset || x > 1081 + xOffset) continue;
+    for (let y = 0; y < 1081; y++) {
+        for (let x = 0; x < 1081; x++) {    
 
             // scale the height, an integer in 0.1 meter resolution
             // to 4 meters resolution, max is 1023m.
-            let h = Math.floor((heightmap[y][x] / 10 - scope.seaLevel) / 4 * parseFloat(scope.heightScale) / 100);
+            let h = Math.floor((heightmap[y + yOffset][x + xOffset] / 10 - scope.seaLevel) / 4 * parseFloat(scope.heightScale) / 100);
 
             // we are here at meters scale
             if (document.getElementById('landOnly').checked) {
@@ -600,16 +598,16 @@ function heightmaptilesToCanvas(heightmap, xOffset, yOffset) {
             h = Math.min(255, h);
 
             // calculate index in image
-            let index = (y - yOffset) * 1081 * 4 + (x - xOffset) * 4;
+            let index = y * 1081 * 4 + x * 4;
 
             // create pixel
-            img.data[index + 0] = h; // heightmap[y, x] / 10;  // red
+            img.data[index + 0] = h;    // heightmap[y, x] / 10;  // red
             img.data[index + 1] = h;    // green
             img.data[index + 2] = h;    // blue
-            img.data[index + 3] = 255;  //alpha, 255 is full opaque
+            img.data[index + 3] = 255;  // alpha, 255 is full opaque
         }
     }
-    
+
     if (document.getElementById('drawGrid').checked) { 
         // draw a grid on the image
         for (let y = 1; y < 1081; y++) {
