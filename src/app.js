@@ -328,15 +328,13 @@ function calcMinMaxHeight(heightmap, xOffset, yOffset) {
     let maxHeight = -10000;
 
     // iterate over the heightmap
-    for (let y = 0; y < 2048; y++) {
-        if (y < yOffset || y > 1081 + yOffset) continue;
-        for (let x = 0; x < 2048; x++) {
-            if (x < xOffset || x > 1081 + xOffset) continue;
+    for (let y = yOffset; y < yOffset + 1081 ; y++) {
+        for (let x = xOffset; x < yOffset + 1081; x++) {
             let h = heightmap[y][x] / 10;
             if (h > maxHeight) maxHeight = h;
             if (h < minHeight) minHeight = h;
         }
-    }
+   }
 
     grid.minHeight = minHeight;
     grid.maxHeight = maxHeight;
@@ -361,45 +359,68 @@ function zoomOut() {
 function getHeightmap(mode = 0) {
     saveSettings(false);
 
-    let extent = getExtent(grid.lng, grid.lat, 18);
+    // get the extent of the current map
+    let extent = getExtent(grid.lng, grid.lat, mapSize);
 
-    let zoom = 12; //1 pixel = ?? m
+    // zoom is 13 in principle
+    let zoom = 13;
 
-    // find covering tile of top left
+    // get a tile that covers the top left and bottom right (for the tile count calculation)
     let x = long2tile(extent.topleft[0], zoom);
     let y = lat2tile(extent.topleft[1], zoom);
+    let x2 = long2tile(extent.bottomright[0], zoom);
+    let y2 = lat2tile(extent.bottomright[1], zoom);
 
-    // calculate the square we need
+    // get the required tile count in Zoom 13
+    let tileCnt = Math.max(x2 - x + 1, y2 - y + 1);
+
+    let iCnt = tileCnt;
+    
+    // fixed in high latitudes: adjusted the tile count to 6 or less
+    // because Terrain-RGB tile is different in size at latitude
+    // don't need too many tiles
+    if (tileCnt > 6) {
+        let z = zoom;
+        do {
+            z--;
+            var tx = long2tile(extent.topleft[0], z);
+            var ty = lat2tile(extent.topleft[1], z);
+            let tx2 = long2tile(extent.bottomright[0], z);
+            let ty2 = lat2tile(extent.bottomright[1], z);
+            var tc = Math.max(tx2 - tx + 1, ty2 - ty + 1);
+        } while (tc > 6);
+        // reflect the fixed result
+        x = tx;
+        y = ty;
+        zoom = z;
+        tileCnt = tc;
+    }
+    
     let tileLng = tile2long(x, zoom);
     let tileLat = tile2lat(y, zoom);
 
-    let tileLng2 = tile2long(x + 4, zoom);
-    let tileLat2 = tile2lat(y + 4, zoom);
+    let tileLng2 = tile2long(x + tileCnt, zoom);
+    let tileLat2 = tile2lat(y + tileCnt, zoom);
 
-    // find size of the tiles. different depending on the longitude
-    let distance = turf.distance(turf.point([tileLng, tileLat]), turf.point([tileLng, tileLat2]), { units: 'kilometers' });
+    // get the length of one side of the tiles extent
+    let distance = turf.distance(turf.point([tileLng, tileLat]), turf.point([tileLng2, tileLat2]), { units: 'kilometers' }) / Math.SQRT2;
 
     // find out the center position of the area we want inside the tiles
-    let topDistance = turf.distance(turf.point([tileLng, tileLat]), turf.point([tileLng, grid.lat]), { units: 'kilometers' });
-    let leftDistance = turf.distance(turf.point([tileLng, tileLat]), turf.point([grid.lng, tileLat]), { units: 'kilometers' });
+    let topDistance = turf.distance(turf.point([tileLng, tileLat]), turf.point([tileLng, extent.topleft[1]]), { units: 'kilometers' });
+    let leftDistance = turf.distance(turf.point([tileLng, tileLat]), turf.point([extent.topleft[0], tileLat]), { units: 'kilometers' });
 
-    // calulate the x and y offset, relative to the center of the map
-    let xOffset = Math.floor(leftDistance / distance * 2048) - Math.floor(1081 / 2);
-    let yOffset = Math.floor(topDistance / distance * 2048) - Math.floor(1081 / 2);
+    // create the tiles empty array
+    let tiles = Create2DArray(tileCnt);
 
-    // create 4 x 4 empty array
-    let tiles = Create2DArray(4);
-
-    // debug: update the download area
     if (debug) {
+        map.setLayoutProperty('debugLayer', 'visibility', 'visible');
         let line = turf.lineString([[tileLng, tileLat], [tileLng2, tileLat2]]);  
         map.getSource('debug').setData(turf.bboxPolygon(turf.bbox(line)));
-        map.getSource('debug').setData(debugGrid);
     }
 
     // download the tiles
-    for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
+    for (let i = 0; i < tileCnt; i++) {
+        for (let j = 0; j < tileCnt; j++) {
             let url = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + i) + '/' + (y + j) + '@2x.pngraw?access_token=' + mapboxgl.accessToken;
 
             PNG.load(url, function (png) {
@@ -415,9 +436,14 @@ function getHeightmap(mode = 0) {
 
         if (isDownloadComplete(tiles)) {
             clearInterval(timer);
-            let heightmap = toHeightmap(tiles);
-
             let canvas, url;
+        
+            // heightmap size corresponds to 1081px map size
+            let heightmap = toHeightmap(tiles, distance);
+
+            // heightmap edge to map edge distance
+            let xOffset = Math.round(leftDistance / distance * heightmap.length);
+            let yOffset = Math.round(topDistance / distance * heightmap.length);
 
             calcMinMaxHeight(heightmap, xOffset, yOffset);
 
@@ -431,7 +457,7 @@ function getHeightmap(mode = 0) {
                     download('heightmap.raw', citiesmap);
                     break;
                 case 1:
-                    canvas = heightmaptilesToCanvas(heightmap, xOffset, yOffset);
+                    canvas = toCanvas(heightmap, xOffset, yOffset);
                     url = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
                     download('heightmap.png', null, url);
                     break;
@@ -439,7 +465,7 @@ function getHeightmap(mode = 0) {
                     updateInfopanel();
                     break;
                 case 255:
-                    canvas = tilesToCanvas(tiles);
+                    canvas = toTerrainRGB(heightmap);
                     url = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
                     download('tiles.png', null, url);
                     break;
@@ -465,8 +491,9 @@ function autoSettings(withMap = true) {
 }
 
 function isDownloadComplete(tiles) {
-    for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
+    let tileNum = tiles.length;
+    for (let i = 0; i < tileNum; i++) {
+        for (let j = 0; j < tileNum; j++) {
             if (!tiles[i][j]) return false;
         }
     }
