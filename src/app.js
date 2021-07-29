@@ -500,20 +500,45 @@ function isDownloadComplete(tiles) {
     return true;
 }
 
-function toHeightmap(tiles) {
-    let heightmap = Create2DArray(4 * 512, 0);
-    for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
+function toHeightmap(tiles, distance) {
+    let tileNum = tiles.length;
+    let srcMap = Create2DArray(tileNum * 512, 0);
+    let heightmap = Create2DArray(Math.round(1081 * distance / mapSize), 0);
+    let smSize = srcMap.length;
+    let hmSize = heightmap.length;
+    let r = (hmSize - 1) / (smSize - 1);
+
+    for (let i = 0; i < tileNum; i++) {
+        for (let j = 0; j < tileNum; j++) {
             let tile = tiles[j][i].decode();
             for (let y = 0; y < 512; y++) {
                 for (let x = 0; x < 512; x++) {
                     let tileIndex = y * 512 * 4 + x * 4;
                     // resolution 0.1 meters
-                    heightmap[i * 512 + y][j * 512 + x] = Math.max(0, -100000 + (tile[tileIndex] * 256 * 256 + tile[tileIndex + 1] * 256 + tile[tileIndex + 2]));
+                    srcMap[i * 512 + y][j * 512 + x] = Math.max(0, -100000 + (tile[tileIndex] * 256 * 256 + tile[tileIndex + 1] * 256 + tile[tileIndex + 2]));
                 }
             }
         }
     }
+
+    // bilinear interpolation
+    let hmIndex = Array(hmSize);
+    
+    for (let i = 0; i < hmSize; i++) {hmIndex[i] = i / r}   
+    for (let i = 0; i < (hmSize - 1); i++) {
+        for (let j = 0; j < (hmSize - 1); j++) {    
+            let y0 = Math.floor(hmIndex[i]);
+            let x0 = Math.floor(hmIndex[j]);
+            let y1 = y0 + 1;
+            let x1 = x0 + 1;
+            let dy = hmIndex[i] - y0;
+            let dx = hmIndex[j] - x0;
+            heightmap[i][j] = Math.round((1 - dx) * (1 - dy) * srcMap[y0][x0] + dx * (1 - dy) * srcMap[y0][x1] + (1 - dx) * dy * srcMap[y1][x0] + dx * dy * srcMap[y1][x1]);
+        }    
+    }
+    for (let i = 0; i < hmSize; i++) {heightmap[i][hmSize - 1] = srcMap[i][hmSize - 1]}
+    for (let j = 0; j < hmSize; j++) {heightmap[hmSize - 1][j] = srcMap[hmSize - 1][j]}
+
     return heightmap;
 }
 
