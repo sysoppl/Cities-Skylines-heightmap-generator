@@ -549,7 +549,7 @@ function toTerrainRGB(heightmap) {
     canvas.width = heightmap.length;
     canvas.height = heightmap.length;
 
-    let img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let img = ctx.createImageData(canvas.width, canvas.height);
 
     for (let y = 0; y < canvas.height; y++) {
         for (let x = 0; x < canvas.width; x++) {
@@ -574,11 +574,12 @@ function toTerrainRGB(heightmap) {
 
 function toCanvas(heightmap, xOffset, yOffset) {
     let canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
     canvas.width = 1081;
     canvas.height = 1081;
 
-    const ctx = canvas.getContext('2d');
-    let img = ctx.getImageData(0, 0, 1081, 1081);
+    let img = ctx.createImageData(1081, 1081);
 
     // iterate over the heightmap, ignore the sealevel rise (for now)
     for (let y = 0; y < 1081; y++) {
