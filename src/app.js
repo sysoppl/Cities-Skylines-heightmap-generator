@@ -17,11 +17,12 @@ if (debug) while (debugElements.length > 0) {
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9obmJlcmciLCJhIjoiY2s2d3FwdTJpMDJnejNtbzBtb2ljbXZiYyJ9.yRKViKWpsMTtE-NPesWZvA';
 
 var map = new mapboxgl.Map({
-    container: 'map', // Specify the container ID
-    style: 'mapbox://styles/mapbox/outdoors-v11', // Specify which map style to use
-    //style: 'mapbox://styles/mapbox/streets-v11', // Specify which map style to use
-    center: [grid.lng, grid.lat], // Specify the starting position [lng, lat]
-    zoom: grid.zoom // Specify the starting zoom
+    container: 'map',                               // Specify the container ID
+    style: 'mapbox://styles/mapbox/outdoors-v11',   // Specify which map style to use
+    //style: 'mapbox://styles/mapbox/streets-v11',  // Specify which map style to use
+    center: [grid.lng, grid.lat],                   // Specify the starting position [lng, lat]
+    zoom: grid.zoom,                                // Specify the starting zoom
+    preserveDrawingBuffer: true
 });
 
 var geocoder = new MapboxGeocoder({
