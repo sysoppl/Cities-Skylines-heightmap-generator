@@ -1,3 +1,5 @@
+// <reference path='https://api.tiles.mapbox.com/mapbox-gl-js/v1.8.0/mapbox-gl.js' />
+
 'use strict'
 
 const vmapSize = 18;
