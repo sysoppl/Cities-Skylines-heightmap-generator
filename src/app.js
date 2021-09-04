@@ -383,7 +383,7 @@ function getHeightmap(mode = 0) {
     saveSettings(false);
 
     // get the extent of the current map
-    let extent = getExtent(grid.lng, grid.lat, mapSize);
+    let extent = getExtent(grid.lng, grid.lat, mapSize + 0.016);
 
     // zoom is 13 in principle
     let zoom = 13;
@@ -764,7 +764,9 @@ function blurWatermap(watermap) {
 function toHeightmap(tiles, distance) {
     let tileNum = tiles.length;
     let srcMap = Create2DArray(tileNum * 512, 0);
-    let heightmap = Create2DArray(Math.round(1081 * distance / mapSize), 0);
+    
+    // in heightmap, each pixel is treated as vertex data, and 1081px represents 1080 faces. therefore, 1px = 16m.
+    let heightmap = Create2DArray(Math.round(1081 * (distance + 0.016) / (mapSize + 0.016)), 0);
     let smSize = srcMap.length;
     let hmSize = heightmap.length;
     let r = (hmSize - 1) / (smSize - 1);
