@@ -14,7 +14,10 @@ if (debug) while (debugElements.length > 0) {
     debugElements[0].classList.remove('debug');
 }
 // This token is created by original repo owner. For now no need to change it (until it works).
-mapboxgl.accessToken = 'pk.eyJ1Ijoiam9obmJlcmciLCJhIjoiY2s2d3FwdTJpMDJnejNtbzBtb2ljbXZiYyJ9.yRKViKWpsMTtE-NPesWZvA';
+// mapboxgl.accessToken = 'pk.eyJ1Ijoiam9obmJlcmciLCJhIjoiY2s2d3FwdTJpMDJnejNtbzBtb2ljbXZiYyJ9.yRKViKWpsMTtE-NPesWZvA';
+
+// This token is created by nonta1234.
+mapboxgl.accessToken = 'pk.eyJ1Ijoibm9udGEiLCJhIjoiY2t0NTBiY2tiMDN0bjJvbzd4ZDRuY3FvaCJ9.DPUD45TAQ6xOu9D9WNi6bw';
 
 var map = new mapboxgl.Map({
     container: 'map',                               // Specify the container ID
