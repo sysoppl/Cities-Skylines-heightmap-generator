@@ -147,6 +147,8 @@ map.on('load', function () {
                 'visibility': 'none'
             },
         });
+
+        document.getElementById('wMap-canvas').style.visibility = 'visible';
     }
 
     map.on('mouseenter', 'startsquare', function () {
