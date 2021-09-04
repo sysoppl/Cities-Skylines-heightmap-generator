@@ -435,12 +435,24 @@ function getHeightmap(mode = 0) {
         }
     }
 
+    // download pbf to vTiles
+    var vTiles = Create2DArray(tileCnt, 0);
+
+    for (let i = 0; i < tileCnt; i++) {
+        for (let j = 0; j < tileCnt; j++) {
+            let url = 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/' + zoom + '/' + (x + j) + '/' + (y + i) + '.vector.pbf?access_token=' + mapboxgl.accessToken;
+
+            downloadPbfToTile(url).then((data) => vTiles[i][j] = data);
+        }
+    }
+
     // wait for the download to complete
     let ticks = 0;
-    let timer = setInterval(function () {
+    let timer = window.setInterval(function () {
         ticks++;
 
-        if (isDownloadComplete(tiles)) {
+        if (isDownloadComplete(tiles, vTiles)) {
+            console.log('download ok');
             clearInterval(timer);
             let canvas, url;
 
@@ -705,4 +717,15 @@ function download(filename, data, url = false) {
 
     // Remove anchor from body
     document.body.removeChild(a)
+}
+
+async function downloadPbfToTile(url) {
+    let response = await fetch(url);
+    if (response.ok) {
+		let bufferRes = await response.arrayBuffer();
+        let tile = new VectorTile(new Protobuf(new Uint8Array(bufferRes)));
+        return tile;
+	} else {
+		console.error("downloadPbf error:", response.status);
+	}
 }
