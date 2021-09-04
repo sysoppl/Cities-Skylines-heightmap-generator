@@ -118,7 +118,7 @@ a, a:visited {
     top: 0;
     left: 0;
     width: 270px;
-    height: 435px;
+    height: auto;
     background: Gainsboro;
     opacity: 0.85;
     padding: 12px;
@@ -133,6 +133,17 @@ a, a:visited {
 .slide-out {
     animation: slide-out 0.5s forwards;
     -webkit-animation: slide-out 0.5s forwards;
+}
+
+#wMap-canvas {
+    position: absolute;
+    top: 100px;
+    right: 100px;
+    width: 500px;
+    height: 500px;
+    z-index: 1;
+    background-color: #FFFFFF;
+    visibility: hidden;
 }
 
 @keyframes slide-in {
@@ -222,6 +233,12 @@ a, a:visited {
     padding: 4px 6px;
 }
 
+#wsSlope {
+    height: 22px;
+    width: 65px;
+    margin: 0;
+}
+
 .debug {
     display: none;
 }
@@ -237,7 +254,7 @@ button {
     color: #666666;
     font-weight: bold;
     padding: 5px 10px;
-    margin: 4px;
+    margin: 10px 4px 4px 4px;
     text-decoration: none;
     text-shadow: 0px 1px 0px #ffffff;
 }
