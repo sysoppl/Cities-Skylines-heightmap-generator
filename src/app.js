@@ -32,6 +32,13 @@ var geocoder = new MapboxGeocoder({
 
 document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
 
+// change waterside slope
+const inputEl = document.getElementById('wsSlope');
+
+const rangeOnChange = (e) => {
+    inputEl.title = e.target.value + ' mtr.';
+}
+
 map.on('load', function () {
     var canvas = map.getCanvasContainer();
 
@@ -178,6 +185,9 @@ map.on('load', function () {
 
     showWaterLayer();
     showHeightLayer();
+
+    // waterside slope control
+    inputEl.addEventListener('input', rangeOnChange);
 });
 
 map.on('click', function (e) {
@@ -507,11 +517,7 @@ function autoSettings(withMap = true) {
     scope.baseLevel = grid.minHeight;
     scope.waterDepth = 5.0;
     scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
-    scope.seaLevel = Math.floor(grid.minHeight);
-    scope.depth = 5.0;
-    scope.heightScale = Math.min(250, Math.floor((1024 - scope.depth) / (grid.maxHeight - scope.seaLevel) * 100));
-    document.getElementById('landOnly').checked = scope.seaLevel === 0;
-    console.log(map.getStyle().layers);
+    scope.wsSlope = '16';
     document.getElementById('blurWs').checked = false;
     document.getElementById('drawStrm').checked = false;
 }
@@ -598,6 +604,124 @@ function toWatermap(vTiles, length) {
     }
 
     return watermap;
+}
+
+function setWatersideSlope(watermap, distance) {
+    // change horizontal distance of waterside slope
+    // 1 <= distance <= 4
+    let wm;
+    let len = watermap.length;
+    let src = Array.from(watermap);
+
+    let offset = distance - 1;
+
+    // kernel
+    let k = [];
+    let diagK = [];
+    let kLen, dkLen;
+
+    // base filter
+    let f = [[0.33],
+            [0.5],                  // dist = 2
+            [0.66, 0.33],           // dist = 3
+            [0.75, 0.5 , 0.25]];    // dist = 4
+
+    if (distance < 2) {
+        return src;
+    } else {
+        wm = Create2DArray(len, 0);
+
+        // generate kernel
+        k.push(f[offset]);
+        diagK.push(f[offset - 1]);
+        kLen = k[0].length;
+        dkLen = diagK[0].length;
+
+        // border padding
+        for (let i = 0; i < offset; i++) {
+            src.unshift(watermap[0]);
+            src.push(watermap[len - 1]);
+        }
+        for (let i = offset; i < len + offset; i++) {
+            for (let j = 0; j < offset; j++) {
+                src[i].unshift(watermap[i - offset][0]);
+                src[i].push(watermap[i - offset][len - 1]);
+            }
+        }
+    }
+
+    let tmp = Create2DArray(src.length, 0);
+
+    for (let i = offset; i < len + offset; i++) {
+        for (let j = offset; j < len + offset; j++) {
+
+            /* check in the following order
+                5 1 6
+                2 * 3
+                7 4 8
+            */
+
+            if (src[i][j] > 0.5) {
+                // No.1
+                if (src[i - 1][j] < src[i][j]) {
+                    for (let m = 0; m < kLen; m++) {
+                        tmp[i - m - 1][j] = Math.max(k[0][m] * src[i][j], src[i - m - 1][j], tmp[i - m - 1][j]);
+                    }
+                }
+                // No.2
+                if (src[i][j - 1] < src[i][j]) {
+                    for (let m = 0; m < kLen; m++) {
+                        tmp[i][j - m - 1] = Math.max(k[0][m] * src[i][j], src[i][j - m - 1], tmp[i][j - m - 1]);
+                    }
+                }
+                // No.3
+                if (src[i][j + 1] < src[i][j]) {
+                    for (let m = 0; m < kLen; m++) {
+                        tmp[i][j + m + 1] = Math.max(k[0][m] * src[i][j], src[i][j + m + 1], tmp[i][j + m + 1]);
+                    }
+                }
+                // No.4
+                if (src[i + 1][j] < src[i][j]) {
+                    for (let m = 0; m < kLen; m++) {
+                        tmp[i + m + 1][j] = Math.max(k[0][m] * src[i][j], src[i + m + 1][j], tmp[i + m + 1][j]);
+                    }
+                }
+                // No.5
+                if (src[i - 1][j - 1] < src[i][j]) {
+                    for (let m = 0; m < dkLen; m++) {
+                        tmp[i - m - 1][j - m - 1] = Math.max(diagK[0][m] * src[i][j], src[i - m - 1][j - m - 1], tmp[i - m - 1][j - m - 1]);
+                    }
+                }
+                // No.6
+                if (src[i - 1][j + 1] < src[i][j]) {
+                    for (let m = 0; m < dkLen; m++) {
+                        tmp[i - m - 1][j + m + 1] = Math.max(diagK[0][m] * src[i][j], src[i - m - 1][j + m + 1], tmp[i - m - 1][j + m + 1]);
+                    }
+                }
+                // No.7
+                if (src[i + 1][j - 1] < src[i][j]) {
+                    for (let m = 0; m < dkLen; m++) {
+                        tmp[i + m + 1][j - m - 1] = Math.max(diagK[0][m] * src[i][j], src[i + m + 1][j - m - 1], tmp[i + m + 1][j - m - 1]);
+                    }
+                }
+                // No.8
+                if (src[i + 1][j + 1] < src[i][j]) {
+                    for (let m = 0; m < dkLen; m++) {
+                        tmp[i + m + 1][j + m + 1] = Math.max(diagK[0][m] * src[i][j], src[i + m + 1][j + m + 1], tmp[i + m + 1][j + m + 1]);
+                    }
+                }
+            }
+            tmp[i][j] = Math.max(src[i][j], tmp[i][j]);
+        }
+    }
+
+    for (let i = 0; i < len; i++) {
+        for (let j = 0; j < len; j++) {
+            wm[i][j] = tmp[i + offset][j + offset];
+        }
+    }
+
+    return wm;
 }
 
 function blurWatermap(watermap) {
