@@ -491,7 +491,7 @@ function getHeightmap(mode = 0) {
         }
 
         // timeout!
-        if (ticks >= 250) {
+        if (ticks >= 10000) {
             clearInterval(timer);
             console.log('timeout');
         }
@@ -507,11 +507,11 @@ function autoSettings(withMap = true) {
     console.log(map.getStyle().layers);
 }
 
-function isDownloadComplete(tiles) {
+function isDownloadComplete(tiles, vTiles) {
     let tileNum = tiles.length;
     for (let i = 0; i < tileNum; i++) {
         for (let j = 0; j < tileNum; j++) {
-            if (!tiles[i][j]) return false;
+            if (!(tiles[i][j] && vTiles[i][j])) return false;
         }
     }
     return true;
