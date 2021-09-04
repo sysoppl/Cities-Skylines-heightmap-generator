@@ -464,17 +464,19 @@ function getHeightmap(mode = 0) {
 
             calcMinMaxHeight(heightmap, xOffset, yOffset);
 
-            if (isNaN(scope.seaLevel)) {
+            let watermap = toWatermap(vTiles, heightmap.length);
+
+            if (isNaN(scope.baseLevel)) {
                 autoSettings(false);
             }
 
             switch (mode) {
                 case 0:
-                    let citiesmap = toCitiesmap(heightmap, xOffset, yOffset);
+                    let citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
                     download('heightmap.raw', citiesmap);
                     break;
                 case 1:
-                    canvas = toCanvas(heightmap, xOffset, yOffset);
+                    canvas = toCanvas(heightmap, watermap, xOffset, yOffset);
                     url = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
                     download('heightmap.png', null, url);
                     break;
@@ -500,11 +502,16 @@ function getHeightmap(mode = 0) {
 
 function autoSettings(withMap = true) {
     if (withMap) getHeightmap(2);
+    scope.baseLevel = grid.minHeight;
+    scope.waterDepth = 5.0;
+    scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
     scope.seaLevel = Math.floor(grid.minHeight);
     scope.depth = 5.0;
     scope.heightScale = Math.min(250, Math.floor((1024 - scope.depth) / (grid.maxHeight - scope.seaLevel) * 100));
     document.getElementById('landOnly').checked = scope.seaLevel === 0;
     console.log(map.getStyle().layers);
+    document.getElementById('blurWs').checked = false;
+    document.getElementById('drawStrm').checked = false;
 }
 
 function isDownloadComplete(tiles, vTiles) {
@@ -515,6 +522,113 @@ function isDownloadComplete(tiles, vTiles) {
         }
     }
     return true;
+}
+
+function toWatermap(vTiles, length) {
+    // extract feature geometry from VectorTileFeature in VectorTile.
+    // draw the polygons of the water area from the feature geometries and return as a water area map.
+
+    let tileCnt = vTiles.length;
+    let canvas = document.getElementById('wMap-canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = length;
+    canvas.height = length;
+
+    let coef = length / (tileCnt * 4096);     // vTiles[][].layers.water.feature(0).extent = 4096 (default)
+
+    // water
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, length, length);
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+
+    for (let ty = 0; ty < tileCnt; ty++) {
+        for (let tx = 0; tx < tileCnt; tx++) {
+            if (vTiles[ty][tx].layers.water != undefined) {   // judge by 'undefined'
+                let geo = vTiles[ty][tx].layers.water.feature(0).loadGeometry();
+
+                for (let i = 0; i < geo.length; i++) {
+                    ctx.moveTo(Math.round(geo[i][0].x * coef + (tx * length / tileCnt)), Math.round(geo[i][0].y * coef + (ty * length / tileCnt)));
+                    for (let j = 1; j < geo[i].length; j++) {
+                        ctx.lineTo(Math.round(geo[i][j].x * coef + (tx * length / tileCnt)), Math.round(geo[i][j].y * coef + (ty * length / tileCnt)));
+                    }
+                }
+
+            }
+        }
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    if (document.getElementById('drawStrm').checked) {
+        // waterway
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+
+        for (let ty = 0; ty < tileCnt; ty++) {
+            for (let tx = 0; tx < tileCnt; tx++) {
+                if (vTiles[ty][tx].layers.waterway != undefined) {   // judge by 'undefined'
+                    let geo = vTiles[ty][tx].layers.waterway.feature(0).loadGeometry();
+
+                    for (let i = 0; i < geo.length; i++) {
+                        ctx.moveTo(Math.round(geo[i][0].x * coef + (tx * length / tileCnt)), Math.round(geo[i][0].y * coef + (ty * length / tileCnt)));
+                        for (let j = 1; j < geo[i].length; j++) {
+                            ctx.lineTo(Math.round(geo[i][j].x * coef + (tx * length / tileCnt)), Math.round(geo[i][j].y * coef + (ty * length / tileCnt)));
+                        }
+                    }
+
+                }
+            }
+        }
+        ctx.stroke();
+    }
+
+    let watermap = Create2DArray(length, 1);
+    let img = ctx.getImageData(0, 0, length, length);
+
+    for (let i = 0; i < length; i++) {
+        for (let j = 0; j < length; j++) {
+            let index = i * length * 4 + j * 4;
+            watermap[i][j] = img.data[index] / 255;     // 0 => 255 : 0 => 1    0 = water, 1 = land
+        }
+    }
+
+    return watermap;
+}
+
+function blurWatermap(watermap) {
+    // gaussian blur
+    let len = watermap.length;
+    let src = Array.from(watermap);
+    let wm = Create2DArray(len, 0);
+
+    // border padding
+    src.unshift(watermap[0]);
+    src.push(watermap[len - 1]);
+    src[1].unshift(watermap[1][0]);
+    src[1].push(watermap[1][len - 1]);
+
+    for (let i = 0; i < len - 1; i++) {
+        // border padding
+        src[i + 2].unshift(watermap[i + 1][0]);
+        src[i + 2].push(watermap[i + 1][len - 1]);
+
+        for (let j = 0; j < len; j++) {
+            wm[i][j] = (src[i][j] + src[i][j + 2] + src[i + 2][j] + src[i + 2][j + 2]) / 16
+                + (src[i][j + 1] + src[i + 1][j] + src[i + 1][j + 2] + src[i + 2][j + 1]) / 8
+                + src[i + 1][j + 1] / 4;
+        }
+    }
+
+    for (let j = 0; j < len; j++) {
+        wm[len - 1][j] = (src[len - 1][j] + src[len - 1][j + 2] + src[len + 1][j] + src[len + 1][j + 2]) / 16
+            + (src[len - 1][j + 1] + src[len][j] + src[len][j + 2] + src[len + 1][j + 1]) / 8
+            + src[len][j + 1] / 4;
+    }
+
+    return wm;
 }
 
 function toHeightmap(tiles, distance) {
@@ -589,7 +703,7 @@ function toTerrainRGB(heightmap) {
     return canvas;
 }
 
-function toCanvas(heightmap, xOffset, yOffset) {
+function toCanvas(heightmap, watermap, xOffset, yOffset) {
     let canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
@@ -598,20 +712,31 @@ function toCanvas(heightmap, xOffset, yOffset) {
 
     let img = ctx.createImageData(1081, 1081);
 
-    // iterate over the heightmap, ignore the sealevel rise (for now)
+    // water depth is unaffected by height scale
+    let depthUnits = scope.waterDepth / 4;
+
+    let wMap;
+
+    let distSlope = scope.wsSlope / 16;
+
+    // option
+    if (document.getElementById('blurWs').checked) {
+        wMap = blurWatermap(setWatersideSlope(watermap, distSlope));
+    } else {
+        wMap = setWatersideSlope(watermap, distSlope);
+    }
+
+    // iterate over the heightmap
     for (let y = 0; y < 1081; y++) {
         for (let x = 0; x < 1081; x++) {
 
             // scale the height, an integer in 0.1 meter resolution
             // to 4 meters resolution, max is 1023m.
-            let h = Math.floor((heightmap[y + yOffset][x + xOffset] / 10 - scope.seaLevel) / 4 * parseFloat(scope.heightScale) / 100);
+            let height = (heightmap[y + yOffset][x + xOffset] / 10 - scope.baseLevel) / 4 * parseFloat(scope.heightScale) / 100;
 
-            // we are here at meters scale
-            if (document.getElementById('landOnly').checked) {
-                if (h > 0) h = h + scope.depth / 4;
-            } else {
-                h = h + scope.depth / 4;
-            }
+            // raise the land by the amount of water depth
+            // a height lower than baselevel is considered to be the below sea level and the height is set to 0
+            let h = Math.max(0, Math.round(height + (depthUnits * wMap[y + yOffset][x + xOffset])));
 
             h = Math.min(255, h);
 
@@ -649,41 +774,41 @@ function toCanvas(heightmap, xOffset, yOffset) {
     return canvas;
 }
 
-function toCitiesmap(heightmap, xOffset, yOffset) {
+function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
     // cities has L/H byte order
     let citiesmap = new Uint8ClampedArray(2 * 1081 * 1081);
+    let wMap;
 
-    // set the height tolerance. dependant if adjacent to sea or ocean
-    let heightTolerance = grid.minHeight == 0 ? 0 : 0.1;
-    heightTolerance = heightTolerance / 0.015625; // to cities units
+    // water depth is unaffected by height scale
+    let depthUnits = scope.waterDepth / 0.015625;
 
-    let depthUnits = scope.depth / 0.015625;
+    let distSlope = scope.wsSlope / 16;
+
+    // option
+    if (document.getElementById('blurWs').checked) {
+        wMap = blurWatermap(setWatersideSlope(watermap, distSlope));
+    } else {
+        wMap = setWatersideSlope(watermap, distSlope);
+    }
 
     for (let y = 0; y < 1081; y++) {
         for (let x = 0; x < 1081; x++) {
 
-            // scale the height, taking seaLevel and scale into account
-            let height = Math.round((heightmap[y + yOffset][x + xOffset] / 10 - scope.seaLevel) / 0.015625 * parseFloat(scope.heightScale) / 100);
+            // scale the height, taking baseLevel and scale into account
+            let height = (heightmap[y + yOffset][x + xOffset] / 10 - scope.baseLevel) / 0.015625 * parseFloat(scope.heightScale) / 100;
 
-            // we are here at cities scale: 0xFFFF = 65535 => 1024 meters
-            if (document.getElementById('landOnly').checked) {
-                if (height > heightTolerance) height = height + depthUnits;
-            } else {
-                // raise the entire map
-                height = height + depthUnits;
-            }
+            // raise the land by the amount of water depth
+            // a height lower than baselevel is considered to be the below sea level and the height is set to 0
+            let h = Math.max(0, Math.round(height + (depthUnits * wMap[y + yOffset][x + xOffset])));
 
-            // make sure water always flows to the west
-            // height = height + (1081 - x - xOffset);
-
-            if (height > 65535) height = 65535;
+            if (h > 65535) h = 65535;
 
             // calculate index in image
             let index = y * 1081 * 2 + x * 2;
 
             // cities used hi/low 16 bit
-            citiesmap[index + 0] = height >> 8;
-            citiesmap[index + 1] = height & 255;
+            citiesmap[index + 0] = h >> 8;
+            citiesmap[index + 1] = h & 255;
         }
     }
 
