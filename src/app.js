@@ -331,20 +331,19 @@ function togglePanel() {
 }
 
 function calcMinMaxHeight(heightmap, xOffset, yOffset) {
-    let minHeight = 10000;
-    let maxHeight = -10000;
+    let minHeight = 100000;
+    let maxHeight = -100000;
 
     // iterate over the heightmap
     for (let y = yOffset; y < yOffset + 1081 ; y++) {
         for (let x = xOffset; x < yOffset + 1081; x++) {
-            let h = heightmap[y][x] / 10;
+            let h = heightmap[y][x];
             if (h > maxHeight) maxHeight = h;
             if (h < minHeight) minHeight = h;
         }
-   }
-
-    grid.minHeight = minHeight;
-    grid.maxHeight = maxHeight;
+    }
+    grid.minHeight = minHeight / 10;
+    grid.maxHeight = maxHeight / 10;
 }
 
 function updateInfopanel() {
