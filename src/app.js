@@ -427,7 +427,7 @@ function getHeightmap(mode = 0) {
     // download the tiles
     for (let i = 0; i < tileCnt; i++) {
         for (let j = 0; j < tileCnt; j++) {
-            let url = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + i) + '/' + (y + j) + '@2x.pngraw?access_token=' + mapboxgl.accessToken;
+            let url = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + j) + '/' + (y + i) + '@2x.pngraw?access_token=' + mapboxgl.accessToken;
 
             PNG.load(url, function (png) {
                 tiles[i][j] = png;
@@ -528,12 +528,12 @@ function toHeightmap(tiles, distance) {
 
     for (let i = 0; i < tileNum; i++) {
         for (let j = 0; j < tileNum; j++) {
-            let tile = tiles[j][i].decode();
+            let tile = tiles[i][j].decode();
             for (let y = 0; y < 512; y++) {
                 for (let x = 0; x < 512; x++) {
                     let tileIndex = y * 512 * 4 + x * 4;
                     // resolution 0.1 meters
-                    srcMap[i * 512 + y][j * 512 + x] = Math.max(0, -100000 + (tile[tileIndex] * 256 * 256 + tile[tileIndex + 1] * 256 + tile[tileIndex + 2]));
+                    srcMap[i * 512 + y][j * 512 + x] = -100000 + ((tile[tileIndex] * 256 * 256 + tile[tileIndex + 1] * 256 + tile[tileIndex + 2]));
                 }
             }
         }
