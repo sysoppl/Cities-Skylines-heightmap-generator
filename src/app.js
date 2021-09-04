@@ -397,8 +397,6 @@ function getHeightmap(mode = 0) {
     // get the required tile count in Zoom 13
     let tileCnt = Math.max(x2 - x + 1, y2 - y + 1);
 
-    let iCnt = tileCnt;
-
     // fixed in high latitudes: adjusted the tile count to 6 or less
     // because Terrain-RGB tile is different in size at latitude
     // don't need too many tiles
