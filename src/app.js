@@ -235,9 +235,12 @@ function showHeightContours(el) {
 }
 
 function showHeightLayer() {
+    let el = document.getElementById('showHeightContours');
     if (grid.heightContours) {
+        if (!el.classList.contains('active')) el.classList.add('active');
         map.setLayoutProperty('contours', 'visibility', 'visible');
     } else {
+        if (el.classList.contains('active')) el.classList.remove('active');
         map.setLayoutProperty('contours', 'visibility', 'none');
     }
 }
@@ -253,9 +256,12 @@ function showWaterContours(el) {
 }
 
 function showWaterLayer() {
+    let el = document.getElementById('showWaterContours');
     if (grid.waterContours) {
+        if (!el.classList.contains('active')) el.classList.add('active');
         map.setLayoutProperty('water-streets', 'visibility', 'visible');
     } else {
+        if (el.classList.contains('active')) el.classList.remove('active');
         map.setLayoutProperty('water-streets', 'visibility', 'none');
     }
 }
