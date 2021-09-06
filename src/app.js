@@ -499,7 +499,7 @@ function getHeightmap(mode = 0) {
                 case 2:
                     updateInfopanel();
                     break;
-				case 3:
+                case 3:
                     canvas = toCanvas(heightmap, watermap, xOffset, yOffset);
                     base64Canvas = canvas.toDataURL("image/png").split(';base64,')[1];
                     downloadAsZip(base64Canvas, 1);
