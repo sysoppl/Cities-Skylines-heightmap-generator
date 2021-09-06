@@ -22,11 +22,11 @@
     <!-- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> -->
 
     <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+
     <link rel="stylesheet" type="text/css" href="styles.css">
-	
+
 	<!-- ANALYTICS SCRIPT -->
-	
-	
+
 </head>
 
 <body class="row">
@@ -44,10 +44,10 @@
             </li>
         </ul>
         <ul class="menu-list fill">
-            <li class="menu-item"><a onclick="showHeightContours(this)" title="Show height contours"><i
+            <li class="menu-item"><a onclick="showHeightContours(this)" title="Show height contours" id="showHeightContours"><i
                         class="fas fa-mountain"></i></a>
             </li>
-            <li class="menu-item"><a onclick="showWaterContours(this)" title="Show water contours"><i
+            <li class="menu-item"><a onclick="showWaterContours(this)" title="Show water contours" id="showWaterContours"><i
                         class="fas fa-water"></i></a>
             </li>
         </ul>
@@ -65,6 +65,7 @@
     </div>
     <div class="fill wrapper">
         <div id="map" class="content"></div>
+        <canvas id="wMap-canvas" width="500" height="500" ></canvas> <!-- for debug -->
         <div id="infopanel" class="slide-out hidden">
             <div id="geocoder" class="geocoder"></div>
             <table class="infotable">
@@ -99,8 +100,8 @@
                         <td>Settings:</td>
                     </tr>
                     <tr>
-                        <td>Sea level:</td>
-                        <td><input data-model="seaLevel" class="number-input" type="number"></td>
+                        <td>Base level:</td>
+                        <td><input class="number-input" type="number" data-model="baseLevel" step="0.1"></td>
                         <td>mtr.</td>
                     </tr>
                     <tr>
@@ -109,14 +110,22 @@
                         <td>%</td>
                     </tr>
                     <tr>
-                        <td>Below sea level:</td>
-                        <td><input class="number-input" type="number" data-model="depth" min="0" max="40" step="0.1">
+                        <td>Water depth:</td>
+                        <td><input class="number-input" type="number" data-model="waterDepth" min="0" max="40" step="0.1">
                         </td>
                         <td>mtr.</td>
                     </tr>
                     <tr>
-                        <td>Only raise land:</td>
-                        <td><input class="number-input" type="checkbox" id="landOnly"></td>
+                        <td>Waterside slope:</td>
+                        <td><input id="wsSlope" type="range" data-model="wsSlope" min="16" max="64" step="16" title="16 mtr."></td>
+                    </tr>
+                    <tr>
+                        <td>Blur waterside:</td>
+                        <td><input class="number-input" type="checkbox" id="blurWs"></td>
+                    </tr>
+                    <tr>
+                        <td>Draw streams:</td>
+                        <td><input class="number-input" type="checkbox" id="drawStrm"></td>
                     </tr>
                     <tr>
                         <td>Draw grid on PNG:</td>
@@ -133,7 +142,8 @@
         </div>
     </div>
 
-    <script src="zlib.js"></script>
+    <script src="pngzlib.js"></script>
+    <script src="lib.js"></script>
     <script src="png.js"></script>
     <script src='tiles.js'></script>
     <script src="binding.js"></script>
