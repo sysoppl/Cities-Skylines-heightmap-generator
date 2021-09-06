@@ -469,7 +469,7 @@ function getHeightmap(mode = 0) {
         if (isDownloadComplete(tiles, vTiles)) {
             console.log('download ok');
             clearInterval(timer);
-            let canvas, url;
+            let canvas, url, base64Canvas;
 
             // heightmap size corresponds to 1081px map size
             let heightmap = toHeightmap(tiles, distance);
@@ -499,6 +499,9 @@ function getHeightmap(mode = 0) {
                 case 2:
                     updateInfopanel();
                     break;
+				case 3:
+					base64Canvas = canvas.toDataURL("image/jpeg").split(';base64,')[1];
+                    downloadAsZip(base64Canvas, 1);
                 case 255:
                     canvas = toTerrainRGB(heightmap);
                     url = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
