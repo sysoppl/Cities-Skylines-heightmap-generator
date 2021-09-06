@@ -5,42 +5,32 @@ Online heightmap generator for Cities: Skylines
 **Check it: https://cs.heightmap.skydark.pl**
  ---
  
- 
-*Original text by original author below*
-## Objective
-The goal is to get a accurate height map for Cities: Skylines
 
 ## Features
-- height resolution 0.1 meters (cities resolution = 0.015 meters at 1:1 scale)
 - easy to use interface
 - takes a 18 x 18 km square from a map
-- can produce png and raw images (use raw for highest accuracy)
+- can produce png, raw images and zip packages
 
 ## How to
-1. Select area that you want to download
-
-![obraz](https://user-images.githubusercontent.com/30871217/123680703-4ebaa880-d849-11eb-8b74-b254e91ef44d.png)
+1. Select area that you want to download  
+![obraz](https://user-images.githubusercontent.com/30871217/123680703-4ebaa880-d849-11eb-8b74-b254e91ef44d.png)  
 Green zone shows playable tiles
 
 
-2. Choose the options that suit you 
- 
+2. Choose the options that suit you  
 ![obraz](https://user-images.githubusercontent.com/30871217/123449129-aa7ffa00-d5db-11eb-9eb5-f2395dc4f173.png)
 
-3. If you want to download RAW file, use top download button
+3. To download use one of available options  
+![image](https://user-images.githubusercontent.com/30871217/132255804-7cbe3e0a-f3f0-4b19-bd2f-0cf434457f09.png)
 
-![obraz](https://user-images.githubusercontent.com/30871217/123448452-380f1a00-d5db-11eb-9a9d-776d61c75d67.png)
-
-OR if you want to download PNG file, use bottom download button. Also, set grid ON / OFF in settings
-
-![obraz](https://user-images.githubusercontent.com/30871217/123448562-5543e880-d5db-11eb-89ed-17043a40460b.png)
-
-
-## Tools needed
-Visual studio code or the editor of your choice.
 
 ## Info panel
-By clicking the i icon, a info panel is displayed. Longitude and Latitude as well as minimum and maximum height of the square are displayed. Clicking the refresh button will update these settings.
+You can modify settings in info panel for your height map so it fits your needs.  
+
+  ---------------------------
+  
+_Original text by original author below_
+
 
 ### Settings
 - **Sea level**: the height that will be used as sea level. For land adjacent to the sea or ocean, this will usual be 0.  
@@ -64,12 +54,3 @@ Sea level is set to 0 meters, Height scale to 300%, below sea level to 20 meters
 ## Frequently asked questions
 Q: when downloading the map Chrome says ```heightmap.raw is not commonly downloaded and may be dangerous```  
 A: just click on the arrow up and choose ```keep```. Height maps are not dangerous at al ;)
-
-## Planned enhancements
-- Possible adjustment of the 18 x 18 km square for getting maps.
-
-
-## Final notes
-- displaying debug info is achieved by adding ```?debug=1``` to the url. A ```png``` map is added, as well as a heatmap and a rectangle of the tiles that are downloaded.
-- due to the nature of mother earth (it is a cube), it is not possible to achive 100%  accuracy near the poles. However, the center square is always at the correct position.
-
