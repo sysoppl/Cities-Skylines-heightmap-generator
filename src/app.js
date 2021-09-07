@@ -630,10 +630,16 @@ function setWatersideSlope(watermap, distance) {
     let kLen, dkLen;
 
     // base filter
+    /*
     let f = [[0.33],
-            [0.5],                  // dist = 2
-            [0.66, 0.33],           // dist = 3
-            [0.75, 0.5 , 0.25]];    // dist = 4
+            [0.5],                      // dist = 2
+            [0.66, 0.33],               // dist = 3
+            [0.75, 0.5, 0.25]];         // dist = 4
+    */
+    let f = [[0.111],
+            [0.250],                    // dist = 2
+            [0.444, 0.111],             // dist = 3
+            [0.563, 0.250, 0.063]];     // dist = 4
 
     if (distance < 2) {
         return src;
