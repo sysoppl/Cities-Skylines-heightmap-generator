@@ -139,8 +139,8 @@ a, a:visited {
     position: absolute;
     top: 100px;
     right: 100px;
-    width: 500px;
-    height: 500px;
+    width: 400px;
+    height: 400px;
     z-index: 1;
     background-color: #FFFFFF;
     visibility: hidden;
