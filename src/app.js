@@ -2,9 +2,9 @@
 
 'use strict'
 
-const vmapSize = 18;
-const mapSize = 17.28;
-const tileSize = 1.92;
+var vmapSize = 17.9712;
+var mapSize = 17.28;
+var tileSize = 1.92;
 
 var grid = loadSettings();
 
