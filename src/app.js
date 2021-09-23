@@ -1064,16 +1064,19 @@ function download(filename, data, url = false) {
 }
 
 async function downloadPbfToTile(url) {
-    let response = await fetch(url);
-    if (response.ok) {
-		let bufferRes = await response.arrayBuffer();
-        let tile = new VectorTile(new Protobuf(new Uint8Array(bufferRes)));
-        return tile;
-	} else {
-		console.error("downloadPbf error:", response.status);
-	}
+    try {
+        let response = await fetch(url);
+        if (response.ok) {
+		    let bufferRes = await response.arrayBuffer();
+            let tile = new VectorTile(new Protobuf(new Uint8Array(bufferRes)));
+            return tile;
+	    } else {
+            throw new Error('download Pbf error:', response.status);
+	    }
+    } catch(e) {
+        console.error(e.message);
+    }
 }
-
 
 //Original by @Niharkanta1
 function downloadAsZip(data, mode){
