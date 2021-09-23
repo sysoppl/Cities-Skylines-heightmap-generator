@@ -34,14 +34,9 @@ var geocoder = new MapboxGeocoder({
     marker: false
 });
 
+const pbElement = document.getElementById('progress');
+
 document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
-
-// change waterside slope
-const inputEl = document.getElementById('wsSlope');
-
-const rangeOnChange = (e) => {
-    inputEl.title = e.target.value + ' mtr.';
-}
 
 map.on('load', function () {
     var canvas = map.getCanvasContainer();
@@ -189,11 +184,14 @@ map.on('load', function () {
         map.once('touchend', onUp);
     });
 
+    scope.mapSize = mapSize;
+    scope.baseLevel = 0;
+    scope.heightScale = 100;
+    scope.waterDepth = 5;
+    scope.wsSlope = 1;
+
     showWaterLayer();
     showHeightLayer();
-
-    // waterside slope control
-    inputEl.addEventListener('input', rangeOnChange);
 });
 
 map.on('click', function (e) {
@@ -365,6 +363,20 @@ function calcMinMaxHeight(heightmap, xOffset, yOffset) {
 }
 
 function updateInfopanel() {
+    let rhs = 17.28 / mapSize * 100;
+    let cell = mapSize * 1000 / 1080;
+
+    let c1 = cell;
+    let c2 = cell * 2;
+    let c3 = cell * 3;
+    let c4 = cell * 4;
+
+    document.getElementById('ov1').innerHTML = c1.toFixed(1);
+    document.getElementById('ov2').innerHTML = c2.toFixed(1);
+    document.getElementById('ov3').innerHTML = c3.toFixed(1);
+    document.getElementById('ov4').innerHTML = c4.toFixed(1);
+
+    document.getElementById('rHeightscale').innerHTML = rhs.toFixed(1);
     document.getElementById('lng').innerHTML = grid.lng.toFixed(5);
     document.getElementById('lat').innerHTML = grid.lat.toFixed(5);
     document.getElementById('minh').innerHTML = grid.minHeight;
@@ -379,7 +391,42 @@ function zoomOut() {
     map.zoomOut();
 }
 
-function getHeightmap(mode = 0) {
+function changeMapsize(el) {
+    mapSize = el.value / 1;
+    vmapSize = mapSize * 1.04;
+    tileSize = mapSize / 9;
+    setGrid(grid.lng, grid.lat, vmapSize);
+
+    grid.minHeight = null;
+    grid.maxHeight = null;
+    updateInfopanel();
+}
+
+function setBaseLevel() {
+    new Promise((resolve) => {
+        getHeightmap(2, resolve);
+    }).then(() => {
+        scope.baseLevel = grid.minHeight;
+    });
+}
+
+function setHeightScale() {
+    new Promise((resolve) => {
+        getHeightmap(2, resolve);
+    }).then(() => {
+        scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
+    });
+}
+
+function incPb(el, value = 1) {
+    let v = el.value + value;
+    el.value = v;
+}
+
+function getHeightmap(mode = 0, callback) {
+    pbElement.value = 0;
+    pbElement.style.visibility = 'visible';
+
     saveSettings(false);
 
     // get the extent of the current map
@@ -388,6 +435,7 @@ function getHeightmap(mode = 0) {
     // zoom is 13 in principle
     let zoom = 13;
 
+    incPb(pbElement);
     // get a tile that covers the top left and bottom right (for the tile count calculation)
     let x = long2tile(extent.topleft[0], zoom);
     let y = lat2tile(extent.topleft[1], zoom);
@@ -398,17 +446,20 @@ function getHeightmap(mode = 0) {
     let tileCnt = Math.max(x2 - x + 1, y2 - y + 1);
 
     // fixed in high latitudes: adjusted the tile count to 6 or less
-    // because Terrain-RGB tile is different in size at latitude
+    // because Terrain RGB tile distance depends on latitude
     // don't need too many tiles
+    incPb(pbElement);
     if (tileCnt > 6) {
         let z = zoom;
+        let tx, ty, tx2, ty2, tc;
         do {
             z--;
-            var tx = long2tile(extent.topleft[0], z);
-            var ty = lat2tile(extent.topleft[1], z);
-            let tx2 = long2tile(extent.bottomright[0], z);
-            let ty2 = lat2tile(extent.bottomright[1], z);
-            var tc = Math.max(tx2 - tx + 1, ty2 - ty + 1);
+            tx = long2tile(extent.topleft[0], z);
+            ty = lat2tile(extent.topleft[1], z);
+            tx2 = long2tile(extent.bottomright[0], z);
+            ty2 = lat2tile(extent.bottomright[1], z);
+            tc = Math.max(tx2 - tx + 1, ty2 - ty + 1);
+            incPb(pbElement);
         } while (tc > 6);
         // reflect the fixed result
         x = tx;
@@ -442,9 +493,10 @@ function getHeightmap(mode = 0) {
     // download the tiles
     for (let i = 0; i < tileCnt; i++) {
         for (let j = 0; j < tileCnt; j++) {
+            incPb(pbElement);
             let url = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + j) + '/' + (y + i) + '@2x.pngraw?access_token=' + mapboxgl.accessToken;
 
-            PNG.load(url, function (png) {
+            PNG.load(url, function(png) {
                 tiles[i][j] = png;
             });
         }
@@ -455,6 +507,7 @@ function getHeightmap(mode = 0) {
 
     for (let i = 0; i < tileCnt; i++) {
         for (let j = 0; j < tileCnt; j++) {
+            incPb(pbElement);
             let url = 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/' + zoom + '/' + (x + j) + '/' + (y + i) + '.vector.pbf?access_token=' + mapboxgl.accessToken;
 
             downloadPbfToTile(url).then((data) => vTiles[i][j] = data);
@@ -465,6 +518,7 @@ function getHeightmap(mode = 0) {
     let ticks = 0;
     let timer = window.setInterval(function () {
         ticks++;
+        incPb(pbElement);
 
         if (isDownloadComplete(tiles, vTiles)) {
             console.log('download ok');
@@ -480,11 +534,11 @@ function getHeightmap(mode = 0) {
 
             calcMinMaxHeight(heightmap, xOffset, yOffset);
 
-            let watermap = toWatermap(vTiles, heightmap.length);
+            pbElement.value = 500;
+            // callback after height calculation is completed
+            if (typeof callback === 'function') callback();
 
-            if (isNaN(scope.baseLevel)) {
-                autoSettings(false);
-            }
+            let watermap = toWatermap(vTiles, heightmap.length);
 
             switch (mode) {
                 case 0:
@@ -511,24 +565,42 @@ function getHeightmap(mode = 0) {
                     break;
             }
             console.log('complete in ', ticks * 10, ' ms');
+            pbElement.style.visibility = 'hidden';
+            pbElement.value = 0;
         }
 
         // timeout!
-        if (ticks >= 10000) {
+        if (ticks >= 1000) {
             clearInterval(timer);
-            console.log('timeout');
+            console.error('timeout!');
         }
     }, 10);
 }
 
 function autoSettings(withMap = true) {
-    if (withMap) getHeightmap(2);
-    scope.baseLevel = grid.minHeight;
+    scope.mapSize = 17.28;
     scope.waterDepth = 5.0;
-    scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
-    scope.wsSlope = '16';
+    scope.wsSlope = 1;
+
+    mapSize = scope.mapSize / 1;
+    vmapSize = mapSize * 1.04;
+    tileSize = mapSize / 9;
+
+    if (withMap) {
+        new Promise((resolve) => {
+            getHeightmap(2, resolve);
+        }).then(() => {
+            scope.baseLevel = grid.minHeight;
+            scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
+        });
+    }
+
+    setGrid(grid.lng, grid.lat, vmapSize);
+
     document.getElementById('blurWs').checked = false;
     document.getElementById('drawStrm').checked = false;
+    document.getElementById('drawMarker').checked = false;
+    document.getElementById('drawGrid').checked = false;
 }
 
 function isDownloadComplete(tiles, vTiles) {
@@ -860,7 +932,7 @@ function toCanvas(heightmap, watermap, xOffset, yOffset) {
 
     let wMap;
 
-    let distSlope = scope.wsSlope / 16;
+    let distSlope = scope.wsSlope / 1;
 
     // option
     if (document.getElementById('blurWs').checked) {
@@ -925,7 +997,7 @@ function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
     // water depth is unaffected by height scale
     let depthUnits = scope.waterDepth / 0.015625;
 
-    let distSlope = scope.wsSlope / 16;
+    let distSlope = scope.wsSlope / 1;
 
     // option
     if (document.getElementById('blurWs').checked) {
@@ -956,10 +1028,12 @@ function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
     }
 
     // marker, upper left corner
-    citiesmap[0] = 255;
-    citiesmap[1] = 255;
-    citiesmap[2] = 0;
-    citiesmap[3] = 0;
+    if (document.getElementById('drawMarker').checked) {
+        citiesmap[0] = 255;
+        citiesmap[1] = 255;
+        citiesmap[2] = 0;
+        citiesmap[3] = 0;
+    }
 
     // log the correct bounding rect to the console
     let bounds = getExtent(grid.lng, grid.lat, mapSize);
