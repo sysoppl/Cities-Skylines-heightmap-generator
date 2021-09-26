@@ -8,6 +8,8 @@ var tileSize = 1.92;
 
 var grid = loadSettings();
 
+var cache;
+
 let debug = !!new URL(window.location.href).searchParams.get('debug');
 let debugElements = document.getElementsByClassName('debug');
 if (debug) while (debugElements.length > 0) {
@@ -189,6 +191,10 @@ map.on('load', function () {
     scope.heightScale = 100;
     scope.waterDepth = 5;
     scope.wsSlope = 1;
+
+    caches.open('tiles').then((data) => {
+        cache = data;
+    });
 
     showWaterLayer();
     showHeightLayer();
@@ -572,7 +578,7 @@ function getHeightmap(mode = 0, callback) {
         }
 
         // timeout!
-        if (ticks >= 1000) {
+        if (ticks >= 5000) {
             clearInterval(timer);
             console.error('timeout!');
         }
@@ -1064,17 +1070,28 @@ function download(filename, data, url = false) {
 }
 
 async function downloadPbfToTile(url) {
-    try {
-        let response = await fetch(url);
-        if (response.ok) {
-		    let bufferRes = await response.arrayBuffer();
-            let tile = new VectorTile(new Protobuf(new Uint8Array(bufferRes)));
-            return tile;
-	    } else {
-            throw new Error('download Pbf error:', response.status);
-	    }
-    } catch(e) {
-        console.error(e.message);
+    const cachedRes = await caches.match(url, {ignoreSearch: true});
+    if (cachedRes) {
+        console.log('load from cache');
+        let bufferRes = await cachedRes.arrayBuffer();
+        let tile = new VectorTile(new Protobuf(new Uint8Array(bufferRes)));
+        return tile;
+    } else {
+        console.log('load by fetch, cache downloaded file');
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                let res = response.clone();
+                let bufferRes = await response.arrayBuffer();
+                let tile = new VectorTile(new Protobuf(new Uint8Array(bufferRes)));
+                cache.put(url, res);
+                return tile;
+            } else {
+                throw new Error('download Pbf error:', response.status);
+            }
+        } catch(e) {
+            console.error(e.message);
+        }
     }
 }
 
