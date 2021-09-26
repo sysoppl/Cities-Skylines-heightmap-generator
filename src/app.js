@@ -2,7 +2,7 @@
 
 'use strict'
 
-var vmapSize = 17.9712;
+var vmapSize = 18.144;
 var mapSize = 17.28;
 var tileSize = 1.92;
 
@@ -399,7 +399,7 @@ function zoomOut() {
 
 function changeMapsize(el) {
     mapSize = el.value / 1;
-    vmapSize = mapSize * 1.04;
+    vmapSize = mapSize * 1.05;
     tileSize = mapSize / 9;
     setGrid(grid.lng, grid.lat, vmapSize);
 
@@ -591,7 +591,7 @@ function autoSettings(withMap = true) {
     scope.wsSlope = 1;
 
     mapSize = scope.mapSize / 1;
-    vmapSize = mapSize * 1.04;
+    vmapSize = mapSize * 1.05;
     tileSize = mapSize / 9;
 
     if (withMap) {
@@ -642,7 +642,7 @@ function toWatermap(vTiles, length) {
 
     for (let ty = 0; ty < tileCnt; ty++) {
         for (let tx = 0; tx < tileCnt; tx++) {
-            if (vTiles[ty][tx].layers.water != undefined) {   // judge by 'undefined'
+            if (vTiles[ty][tx].layers.water) {      // judge by 'undefined'
                 let geo = vTiles[ty][tx].layers.water.feature(0).loadGeometry();
 
                 for (let i = 0; i < geo.length; i++) {
@@ -666,7 +666,7 @@ function toWatermap(vTiles, length) {
 
         for (let ty = 0; ty < tileCnt; ty++) {
             for (let tx = 0; tx < tileCnt; tx++) {
-                if (vTiles[ty][tx].layers.waterway != undefined) {   // judge by 'undefined'
+                if (vTiles[ty][tx].layers.waterway) {       // judge by 'undefined'
                     let geo = vTiles[ty][tx].layers.waterway.feature(0).loadGeometry();
 
                     for (let i = 0; i < geo.length; i++) {
