@@ -504,7 +504,7 @@ function getHeightmap(mode = 0, callback) {
             incPb(pbElement);
             let url = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + j) + '/' + (y + i) + '@2x.pngraw?access_token=' + mapboxgl.accessToken;
             // let woQUrl = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + j) + '/' + (y + i) + '@2x.pngraw';
-            
+
             PNG.load(url, function(png) {
                 tiles[i][j] = png;
             });
