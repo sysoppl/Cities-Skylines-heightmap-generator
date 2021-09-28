@@ -564,13 +564,14 @@ dd.wsSlp {
 
 #wMap-canvas {
     position: absolute;
-    top: 100px;
-    right: 100px;
+    top: 2.5rem;
+    right: 2.5rem;
     width: 400px;
     height: 400px;
     z-index: 1;
     background-color: #ffffff;
     visibility: hidden;
+    box-shadow: 0 8px 10px 1px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12), 0 5px 5px -3px rgba(0,0,0,0.20);
 }
 
 progress {
