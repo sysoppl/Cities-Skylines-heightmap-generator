@@ -503,7 +503,8 @@ function getHeightmap(mode = 0, callback) {
         for (let j = 0; j < tileCnt; j++) {
             incPb(pbElement);
             let url = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + j) + '/' + (y + i) + '@2x.pngraw?access_token=' + mapboxgl.accessToken;
-
+            // let woQUrl = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + j) + '/' + (y + i) + '@2x.pngraw';
+            
             PNG.load(url, function(png) {
                 tiles[i][j] = png;
             });
@@ -517,8 +518,9 @@ function getHeightmap(mode = 0, callback) {
         for (let j = 0; j < tileCnt; j++) {
             incPb(pbElement);
             let url = 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/' + zoom + '/' + (x + j) + '/' + (y + i) + '.vector.pbf?access_token=' + mapboxgl.accessToken;
+            let woQUrl = 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/' + zoom + '/' + (x + j) + '/' + (y + i) + '.vector.pbf';
 
-            downloadPbfToTile(url).then((data) => vTiles[i][j] = data);
+            downloadPbfToTile(url, woQUrl).then((data) => vTiles[i][j] = data);
         }
     }
 
@@ -1069,22 +1071,22 @@ function download(filename, data, url = false) {
     document.body.removeChild(a)
 }
 
-async function downloadPbfToTile(url) {
-    const cachedRes = await caches.match(url, {ignoreSearch: true});
+async function downloadPbfToTile(url, withoutQueryUrl = url) {
+    const cachedRes = await caches.match(url, { ignoreSearch: true });
     if (cachedRes) {
-        console.log('load from cache');
-        let bufferRes = await cachedRes.arrayBuffer();
-        let tile = new VectorTile(new Protobuf(new Uint8Array(bufferRes)));
+        console.log('pbf: load from cache');
+        let data = await cachedRes.arrayBuffer();
+        let tile = new VectorTile(new Protobuf(new Uint8Array(data)));
         return tile;
     } else {
-        console.log('load by fetch, cache downloaded file');
+        console.log('pbf: load by fetch, cache downloaded file');
         try {
             const response = await fetch(url);
             if (response.ok) {
                 let res = response.clone();
-                let bufferRes = await response.arrayBuffer();
-                let tile = new VectorTile(new Protobuf(new Uint8Array(bufferRes)));
-                cache.put(url, res);
+                let data = await response.arrayBuffer();
+                let tile = new VectorTile(new Protobuf(new Uint8Array(data)));
+                cache.put(withoutQueryUrl, res);
                 return tile;
             } else {
                 throw new Error('download Pbf error:', response.status);
