@@ -860,7 +860,7 @@ function toHeightmap(tiles, distance) {
 
     // in heightmap, each pixel is treated as vertex data, and 1081px represents 1080 faces
     // therefore, "1px = 16m" when the map size is 17.28km
-    let heightmap = Create2DArray(Math.round(1080 * (distance / mapSize)), 0);
+    let heightmap = Create2DArray(Math.ceil(1080 * (distance / mapSize)), 0);
     let smSize = srcMap.length;
     let hmSize = heightmap.length;
     let r = (hmSize - 1) / (smSize - 1);
