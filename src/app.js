@@ -150,6 +150,7 @@ map.on('load', function () {
         });
 
         document.getElementById('wMap-canvas').style.visibility = 'visible';
+        document.getElementById('dcBox').style.display = 'block';
     }
 
     map.on('mouseenter', 'startsquare', function () {
@@ -192,9 +193,7 @@ map.on('load', function () {
     scope.waterDepth = 5;
     scope.wsSlope = 1;
 
-    caches.open('tiles').then((data) => {
-        cache = data;
-    });
+    caches.open('tiles').then((data) => cache = data);
 
     showWaterLayer();
     showHeightLayer();
@@ -285,6 +284,14 @@ function showWaterLayer() {
     } else {
         if (el.classList.contains('active')) el.classList.remove('active');
         map.setLayoutProperty('water-streets', 'visibility', 'none');
+    }
+}
+
+function deleteCaches() {
+    if (confirm('Delete the caches.\nIs that okay?')) {
+        caches.delete('tiles').then(() => {
+            caches.open('tiles').then((data) => cache = data);
+        });
     }
 }
 
@@ -507,12 +514,13 @@ function getHeightmap(mode = 0, callback) {
 
             PNG.load(url, function(png) {
                 tiles[i][j] = png;
+                if (!(png)) console.error('missing terrain-rgb file: ' + zoom + '/' + (x + j) + '/' + (y + i));
             });
         }
     }
 
     // download pbf to vTiles
-    var vTiles = Create2DArray(tileCnt, 0);
+    var vTiles = Create2DArray(tileCnt);
 
     for (let i = 0; i < tileCnt; i++) {
         for (let j = 0; j < tileCnt; j++) {
@@ -583,6 +591,7 @@ function getHeightmap(mode = 0, callback) {
         if (ticks >= 5000) {
             clearInterval(timer);
             console.error('timeout!');
+            pbElement.value = 0;
         }
     }, 10);
 }
@@ -617,7 +626,7 @@ function isDownloadComplete(tiles, vTiles) {
     let tileNum = tiles.length;
     for (let i = 0; i < tileNum; i++) {
         for (let j = 0; j < tileNum; j++) {
-            if (!(tiles[i][j] && vTiles[i][j])) return false;
+            if (!(tiles[i][j]) || !(vTiles[i][j])) return false;
         }
     }
     return true;
@@ -644,7 +653,7 @@ function toWatermap(vTiles, length) {
 
     for (let ty = 0; ty < tileCnt; ty++) {
         for (let tx = 0; tx < tileCnt; tx++) {
-            if (vTiles[ty][tx].layers.water) {      // judge by 'undefined'
+            if (vTiles[ty][tx].layers.water) {
                 let geo = vTiles[ty][tx].layers.water.feature(0).loadGeometry();
 
                 for (let i = 0; i < geo.length; i++) {
@@ -668,7 +677,7 @@ function toWatermap(vTiles, length) {
 
         for (let ty = 0; ty < tileCnt; ty++) {
             for (let tx = 0; tx < tileCnt; tx++) {
-                if (vTiles[ty][tx].layers.waterway) {       // judge by 'undefined'
+                if (vTiles[ty][tx].layers.waterway) {
                     let geo = vTiles[ty][tx].layers.waterway.feature(0).loadGeometry();
 
                     for (let i = 0; i < geo.length; i++) {
@@ -1073,7 +1082,7 @@ function download(filename, data, url = false) {
 
 async function downloadPbfToTile(url, withoutQueryUrl = url) {
     const cachedRes = await caches.match(url, { ignoreSearch: true });
-    if (cachedRes) {
+    if (cachedRes && cachedRes.ok) {
         console.log('pbf: load from cache');
         let data = await cachedRes.arrayBuffer();
         let tile = new VectorTile(new Protobuf(new Uint8Array(data)));
@@ -1092,7 +1101,7 @@ async function downloadPbfToTile(url, withoutQueryUrl = url) {
                 throw new Error('download Pbf error:', response.status);
             }
         } catch(e) {
-            console.error(e.message);
+            console.log(e.message);
         }
     }
 }

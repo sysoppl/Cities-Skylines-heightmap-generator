@@ -605,3 +605,23 @@ progress::-ms-fill {
     /* transition: width 0.25s;*/
     background-color: #0078f0;
 }
+
+#dcBox {
+    display: none;
+}
+
+#deleteCaches {
+    position: relative;
+}
+
+.fa-times {
+    position: absolute;
+    top: 0.375rem;
+    left: 0.3125rem;
+    font-size: 1rem;
+    text-shadow:1px 1px 0 #000, -1px -1px 0 #000,
+        -1px 1px 0 #000, 1px -1px 0 #000,
+        0px 1px 0 #000, 0 -1px 0 #000,
+        -1px 0 0 #000, 1px 0 0 #000;
+    pointer-events: none;
+}
