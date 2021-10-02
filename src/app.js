@@ -510,12 +510,10 @@ function getHeightmap(mode = 0, callback) {
         for (let j = 0; j < tileCnt; j++) {
             incPb(pbElement);
             let url = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + j) + '/' + (y + i) + '@2x.pngraw?access_token=' + mapboxgl.accessToken;
-            // let woQUrl = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + j) + '/' + (y + i) + '@2x.pngraw';
+            let woQUrl = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + j) + '/' + (y + i) + '@2x.pngraw';
 
-            PNG.load(url, function(png) {
-                tiles[i][j] = png;
-                if (!(png)) console.error('missing terrain-rgb file: ' + zoom + '/' + (x + j) + '/' + (y + i));
-            });
+            downloadPngToTile(url, woQUrl).then((png) => tiles[i][j] = png);
+
         }
     }
 
@@ -876,7 +874,7 @@ function toHeightmap(tiles, distance) {
 
     for (let i = 0; i < tileNum; i++) {
         for (let j = 0; j < tileNum; j++) {
-            let tile = tiles[i][j].decode();
+            let tile = new Uint8Array(UPNG.toRGBA8(tiles[i][j])[0]);
             for (let y = 0; y < 512; y++) {
                 for (let x = 0; x < 512; x++) {
                     let tileIndex = y * 512 * 4 + x * 4;
@@ -1078,6 +1076,32 @@ function download(filename, data, url = false) {
 
     // Remove anchor from body
     document.body.removeChild(a)
+}
+
+async function downloadPngToTile(url, withoutQueryUrl = url) {
+    const cachedRes = await caches.match(url, { ignoreSearch: true });
+    if (cachedRes && cachedRes.ok) {
+        console.log('terrain-rgb: load from cache');
+        let pngData = await cachedRes.arrayBuffer();
+        let png = UPNG.decode(pngData);
+        return png;
+    } else {
+        console.log('terrain-rgb: load by fetch, cache downloaded file');
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                let res = response.clone();
+                let pngData = await response.arrayBuffer();
+                let png = UPNG.decode(pngData);
+                cache.put(withoutQueryUrl, res);
+                return png;
+            } else {
+                throw new Error('download terrain-rgb error:', response.status);
+            }
+        } catch(e) {
+            console.log(e.message);
+        }
+    }
 }
 
 async function downloadPbfToTile(url, withoutQueryUrl = url) {
