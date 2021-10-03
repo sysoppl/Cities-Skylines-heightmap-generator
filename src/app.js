@@ -587,7 +587,7 @@ function getHeightmap(mode = 0, callback) {
         }
 
         // timeout!
-        if (ticks >= 5000) {
+        if (ticks >= 1000) {
             clearInterval(timer);
             console.error('timeout!');
             pbElement.value = 0;
