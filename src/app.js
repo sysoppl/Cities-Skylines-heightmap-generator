@@ -652,16 +652,17 @@ function toWatermap(vTiles, length) {
 
     for (let ty = 0; ty < tileCnt; ty++) {
         for (let tx = 0; tx < tileCnt; tx++) {
-            if (vTiles[ty][tx].layers.water) {
-                let geo = vTiles[ty][tx].layers.water.feature(0).loadGeometry();
+            if (typeof vTiles[ty][tx] !== "boolean") {
+                if (vTiles[ty][tx].layers.water) {
+                    let geo = vTiles[ty][tx].layers.water.feature(0).loadGeometry();
 
-                for (let i = 0; i < geo.length; i++) {
-                    ctx.moveTo(Math.round(geo[i][0].x * coef + (tx * length / tileCnt)), Math.round(geo[i][0].y * coef + (ty * length / tileCnt)));
-                    for (let j = 1; j < geo[i].length; j++) {
-                        ctx.lineTo(Math.round(geo[i][j].x * coef + (tx * length / tileCnt)), Math.round(geo[i][j].y * coef + (ty * length / tileCnt)));
+                    for (let i = 0; i < geo.length; i++) {
+                        ctx.moveTo(Math.round(geo[i][0].x * coef + (tx * length / tileCnt)), Math.round(geo[i][0].y * coef + (ty * length / tileCnt)));
+                        for (let j = 1; j < geo[i].length; j++) {
+                            ctx.lineTo(Math.round(geo[i][j].x * coef + (tx * length / tileCnt)), Math.round(geo[i][j].y * coef + (ty * length / tileCnt)));
+                        }
                     }
                 }
-
             }
         }
     }
@@ -676,16 +677,17 @@ function toWatermap(vTiles, length) {
 
         for (let ty = 0; ty < tileCnt; ty++) {
             for (let tx = 0; tx < tileCnt; tx++) {
-                if (vTiles[ty][tx].layers.waterway) {
-                    let geo = vTiles[ty][tx].layers.waterway.feature(0).loadGeometry();
+                if (typeof vTiles[ty][tx] !== "boolean") {
+                    if (vTiles[ty][tx].layers.waterway) {
+                        let geo = vTiles[ty][tx].layers.waterway.feature(0).loadGeometry();
 
-                    for (let i = 0; i < geo.length; i++) {
-                        ctx.moveTo(Math.round(geo[i][0].x * coef + (tx * length / tileCnt)), Math.round(geo[i][0].y * coef + (ty * length / tileCnt)));
-                        for (let j = 1; j < geo[i].length; j++) {
-                            ctx.lineTo(Math.round(geo[i][j].x * coef + (tx * length / tileCnt)), Math.round(geo[i][j].y * coef + (ty * length / tileCnt)));
+                        for (let i = 0; i < geo.length; i++) {
+                            ctx.moveTo(Math.round(geo[i][0].x * coef + (tx * length / tileCnt)), Math.round(geo[i][0].y * coef + (ty * length / tileCnt)));
+                            for (let j = 1; j < geo[i].length; j++) {
+                                ctx.lineTo(Math.round(geo[i][j].x * coef + (tx * length / tileCnt)), Math.round(geo[i][j].y * coef + (ty * length / tileCnt)));
+                            }
                         }
                     }
-
                 }
             }
         }
@@ -1127,6 +1129,7 @@ async function downloadPbfToTile(url, withoutQueryUrl = url) {
             }
         } catch(e) {
             console.log(e.message);
+            return true;
         }
     }
 }
