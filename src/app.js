@@ -377,6 +377,7 @@ function calcMinMaxHeight(heightmap, xOffset, yOffset) {
 
 function updateInfopanel() {
     let rhs = 17.28 / mapSize * 100;
+    /*
     let cell = mapSize * 1000 / 1080;
 
     let c1 = cell;
@@ -388,7 +389,7 @@ function updateInfopanel() {
     document.getElementById('ov2').innerHTML = c2.toFixed(1);
     document.getElementById('ov3').innerHTML = c3.toFixed(1);
     document.getElementById('ov4').innerHTML = c4.toFixed(1);
-
+    */
     document.getElementById('rHeightscale').innerHTML = rhs.toFixed(1);
     document.getElementById('lng').innerHTML = grid.lng.toFixed(5);
     document.getElementById('lat').innerHTML = grid.lat.toFixed(5);
