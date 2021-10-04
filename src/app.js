@@ -540,7 +540,7 @@ function getHeightmap(mode = 0, callback) {
         if (isDownloadComplete(tiles, vTiles)) {
             console.log('download ok');
             clearInterval(timer);
-            let canvas, url, base64Canvas;
+            let citiesmap, png, canvas, url, base64png;
 
             // heightmap size corresponds to 1081px map size
             let heightmap = toHeightmap(tiles, distance);
@@ -559,21 +559,21 @@ function getHeightmap(mode = 0, callback) {
 
             switch (mode) {
                 case 0:
-                    let citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
+                    citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
                     download('heightmap.raw', citiesmap);
                     break;
                 case 1:
-                    canvas = toCanvas(heightmap, watermap, xOffset, yOffset);
-                    url = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
-                    download('heightmap.png', null, url);
+                    citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
+                    png = UPNG.encodeLL([citiesmap], 1081, 1081, 1, 0, 16);
+                    download('heightmap.png', png);
                     break;
                 case 2:
                     updateInfopanel();
                     break;
                 case 3:
-                    canvas = toCanvas(heightmap, watermap, xOffset, yOffset);
-                    base64Canvas = canvas.toDataURL("image/png").split(';base64,')[1];
-                    downloadAsZip(base64Canvas, 1);
+                    citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
+                    png = UPNG.encodeLL([citiesmap], 1081, 1081, 1, 0, 16);
+                    downloadAsZip(png, 1);
                     break;
                 case 255:
                     canvas = toTerrainRGB(heightmap);
@@ -931,77 +931,6 @@ function toTerrainRGB(heightmap) {
             img.data[index + 1] = g;
             img.data[index + 2] = b;
             img.data[index + 3] = 255;
-        }
-    }
-
-    ctx.putImageData(img, 0, 0);
-
-    return canvas;
-}
-
-function toCanvas(heightmap, watermap, xOffset, yOffset) {
-    let canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    canvas.width = 1081;
-    canvas.height = 1081;
-
-    let img = ctx.createImageData(1081, 1081);
-
-    // water depth is unaffected by height scale
-    let depthUnits = scope.waterDepth / 4;
-
-    let wMap;
-
-    let distSlope = scope.wsSlope / 1;
-
-    // option
-    if (document.getElementById('blurWs').checked) {
-        wMap = blurWatermap(setWatersideSlope(watermap, distSlope));
-    } else {
-        wMap = setWatersideSlope(watermap, distSlope);
-    }
-
-    // iterate over the heightmap
-    for (let y = 0; y < 1081; y++) {
-        for (let x = 0; x < 1081; x++) {
-
-            // scale the height, an integer in 0.1 meter resolution
-            // to 4 meters resolution, max is 1023m.
-            let height = (heightmap[y + yOffset][x + xOffset] / 10 - scope.baseLevel) / 4 * parseFloat(scope.heightScale) / 100;
-
-            // raise the land by the amount of water depth
-            // a height lower than baselevel is considered to be the below sea level and the height is set to 0
-            let h = Math.max(0, Math.round(height + (depthUnits * wMap[y + yOffset][x + xOffset])));
-
-            h = Math.min(255, h);
-
-            // calculate index in image
-            let index = y * 1081 * 4 + x * 4;
-
-            // create pixel
-            img.data[index + 0] = h;    // heightmap[y, x] / 10;  // red
-            img.data[index + 1] = h;    // green
-            img.data[index + 2] = h;    // blue
-            img.data[index + 3] = 255;  // alpha, 255 is full opaque
-        }
-    }
-
-    if (document.getElementById('drawGrid').checked) {
-        // draw a grid on the image
-        for (let y = 1; y < 1081; y++) {
-            for (let x = 1; x < 1081; x++) {
-
-                if (y % 120 == 0 || x % 120 == 0) {
-                    // calculate index in image
-                    let index = y * 1081 * 4 + x * 4;
-
-                    // create pixel
-                    img.data[index + 0] = 63;
-                    img.data[index + 1] = 63;
-                    img.data[index + 2] = 63;
-                }
-            }
         }
     }
 
