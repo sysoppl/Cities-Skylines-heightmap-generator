@@ -977,6 +977,23 @@ function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
         }
     }
 
+    // draw a grid on the image
+    if (document.getElementById('drawGrid').checked) {
+        for (let y = 0; y < 1081; y++) {
+            for (let x = 0; x < 1081; x++) {
+
+                if (y % 120 == 0 || x % 120 == 0) {
+                    // calculate index in image
+                    let index = y * 1081 * 2 + x * 2;
+
+                    // create pixel
+                    citiesmap[index + 0] = 63;
+                    citiesmap[index + 1] = 255;
+                }
+            }
+        }
+    }
+
     // marker, upper left corner
     if (document.getElementById('drawMarker').checked) {
         citiesmap[0] = 255;
