@@ -2,11 +2,13 @@
 
 'use strict'
 
-const vmapSize = 18;
-const mapSize = 17.28;
-const tileSize = 1.92;
+var vmapSize = 18.144;
+var mapSize = 17.28;
+var tileSize = 1.92;
 
 var grid = loadSettings();
+
+var cache;
 
 let debug = !!new URL(window.location.href).searchParams.get('debug');
 let debugElements = document.getElementsByClassName('debug');
@@ -34,14 +36,9 @@ var geocoder = new MapboxGeocoder({
     marker: false
 });
 
+const pbElement = document.getElementById('progress');
+
 document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
-
-// change waterside slope
-const inputEl = document.getElementById('wsSlope');
-
-const rangeOnChange = (e) => {
-    inputEl.title = e.target.value + ' mtr.';
-}
 
 map.on('load', function () {
     var canvas = map.getCanvasContainer();
@@ -153,6 +150,7 @@ map.on('load', function () {
         });
 
         document.getElementById('wMap-canvas').style.visibility = 'visible';
+        document.getElementById('dcBox').style.display = 'block';
     }
 
     map.on('mouseenter', 'startsquare', function () {
@@ -189,11 +187,16 @@ map.on('load', function () {
         map.once('touchend', onUp);
     });
 
+    scope.mapSize = mapSize;
+    scope.baseLevel = 0;
+    scope.heightScale = 100;
+    scope.waterDepth = 5;
+    scope.wsSlope = 1;
+
+    caches.open('tiles').then((data) => cache = data);
+
     showWaterLayer();
     showHeightLayer();
-
-    // waterside slope control
-    inputEl.addEventListener('input', rangeOnChange);
 });
 
 map.on('click', function (e) {
@@ -284,6 +287,14 @@ function showWaterLayer() {
     }
 }
 
+function deleteCaches() {
+    if (confirm('Delete the caches.\nIs that okay?')) {
+        caches.delete('tiles').then(() => {
+            caches.open('tiles').then((data) => cache = data);
+        });
+    }
+}
+
 function hideDebugLayer() {
     if (debug) map.setLayoutProperty('debugLayer', 'visibility', 'none');
     grid.minHeight = null;
@@ -365,6 +376,21 @@ function calcMinMaxHeight(heightmap, xOffset, yOffset) {
 }
 
 function updateInfopanel() {
+    let rhs = 17.28 / mapSize * 100;
+    /*
+    let cell = mapSize * 1000 / 1080;
+
+    let c1 = cell;
+    let c2 = cell * 2;
+    let c3 = cell * 3;
+    let c4 = cell * 4;
+
+    document.getElementById('ov1').innerHTML = c1.toFixed(1);
+    document.getElementById('ov2').innerHTML = c2.toFixed(1);
+    document.getElementById('ov3').innerHTML = c3.toFixed(1);
+    document.getElementById('ov4').innerHTML = c4.toFixed(1);
+    */
+    document.getElementById('rHeightscale').innerHTML = rhs.toFixed(1);
     document.getElementById('lng').innerHTML = grid.lng.toFixed(5);
     document.getElementById('lat').innerHTML = grid.lat.toFixed(5);
     document.getElementById('minh').innerHTML = grid.minHeight;
@@ -379,15 +405,53 @@ function zoomOut() {
     map.zoomOut();
 }
 
-function getHeightmap(mode = 0) {
+function changeMapsize(el) {
+    mapSize = el.value / 1;
+    vmapSize = mapSize * 1.05;
+    tileSize = mapSize / 9;
+    setGrid(grid.lng, grid.lat, vmapSize);
+
+    grid.minHeight = null;
+    grid.maxHeight = null;
+    updateInfopanel();
+}
+
+function setBaseLevel() {
+    new Promise((resolve) => {
+        getHeightmap(2, resolve);
+    }).then(() => {
+        scope.baseLevel = grid.minHeight;
+    });
+}
+
+function setHeightScale() {
+    new Promise((resolve) => {
+        getHeightmap(2, resolve);
+    }).then(() => {
+        scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
+    });
+}
+
+function incPb(el, value = 1) {
+    let v = el.value + value;
+    el.value = v;
+}
+
+function getHeightmap(mode = 0, callback) {
+    pbElement.value = 0;
+    pbElement.style.visibility = 'visible';
+
     saveSettings(false);
 
     // get the extent of the current map
-    let extent = getExtent(grid.lng, grid.lat, mapSize + 0.016);
+    // in heightmap, each pixel is treated as vertex data, and 1081px represents 1080 faces
+    // therefore, "1px = 16m" when the map size is 17.28km
+    let extent = getExtent(grid.lng, grid.lat, mapSize / 1080 * 1081);
 
     // zoom is 13 in principle
     let zoom = 13;
 
+    incPb(pbElement);
     // get a tile that covers the top left and bottom right (for the tile count calculation)
     let x = long2tile(extent.topleft[0], zoom);
     let y = lat2tile(extent.topleft[1], zoom);
@@ -398,17 +462,20 @@ function getHeightmap(mode = 0) {
     let tileCnt = Math.max(x2 - x + 1, y2 - y + 1);
 
     // fixed in high latitudes: adjusted the tile count to 6 or less
-    // because Terrain-RGB tile is different in size at latitude
+    // because Terrain RGB tile distance depends on latitude
     // don't need too many tiles
+    incPb(pbElement);
     if (tileCnt > 6) {
         let z = zoom;
+        let tx, ty, tx2, ty2, tc;
         do {
             z--;
-            var tx = long2tile(extent.topleft[0], z);
-            var ty = lat2tile(extent.topleft[1], z);
-            let tx2 = long2tile(extent.bottomright[0], z);
-            let ty2 = lat2tile(extent.bottomright[1], z);
-            var tc = Math.max(tx2 - tx + 1, ty2 - ty + 1);
+            tx = long2tile(extent.topleft[0], z);
+            ty = lat2tile(extent.topleft[1], z);
+            tx2 = long2tile(extent.bottomright[0], z);
+            ty2 = lat2tile(extent.bottomright[1], z);
+            tc = Math.max(tx2 - tx + 1, ty2 - ty + 1);
+            incPb(pbElement);
         } while (tc > 6);
         // reflect the fixed result
         x = tx;
@@ -442,22 +509,25 @@ function getHeightmap(mode = 0) {
     // download the tiles
     for (let i = 0; i < tileCnt; i++) {
         for (let j = 0; j < tileCnt; j++) {
+            incPb(pbElement);
             let url = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + j) + '/' + (y + i) + '@2x.pngraw?access_token=' + mapboxgl.accessToken;
+            let woQUrl = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/' + zoom + '/' + (x + j) + '/' + (y + i) + '@2x.pngraw';
 
-            PNG.load(url, function (png) {
-                tiles[i][j] = png;
-            });
+            downloadPngToTile(url, woQUrl).then((png) => tiles[i][j] = png);
+
         }
     }
 
     // download pbf to vTiles
-    var vTiles = Create2DArray(tileCnt, 0);
+    var vTiles = Create2DArray(tileCnt);
 
     for (let i = 0; i < tileCnt; i++) {
         for (let j = 0; j < tileCnt; j++) {
+            incPb(pbElement);
             let url = 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/' + zoom + '/' + (x + j) + '/' + (y + i) + '.vector.pbf?access_token=' + mapboxgl.accessToken;
+            let woQUrl = 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/' + zoom + '/' + (x + j) + '/' + (y + i) + '.vector.pbf';
 
-            downloadPbfToTile(url).then((data) => vTiles[i][j] = data);
+            downloadPbfToTile(url, woQUrl).then((data) => vTiles[i][j] = data);
         }
     }
 
@@ -465,11 +535,12 @@ function getHeightmap(mode = 0) {
     let ticks = 0;
     let timer = window.setInterval(function () {
         ticks++;
+        incPb(pbElement);
 
         if (isDownloadComplete(tiles, vTiles)) {
             console.log('download ok');
             clearInterval(timer);
-            let canvas, url, base64Canvas;
+            let citiesmap, png, canvas, url, base64png;
 
             // heightmap size corresponds to 1081px map size
             let heightmap = toHeightmap(tiles, distance);
@@ -480,29 +551,29 @@ function getHeightmap(mode = 0) {
 
             calcMinMaxHeight(heightmap, xOffset, yOffset);
 
-            let watermap = toWatermap(vTiles, heightmap.length);
+            pbElement.value = 500;
+            // callback after height calculation is completed
+            if (typeof callback === 'function') callback();
 
-            if (isNaN(scope.baseLevel)) {
-                autoSettings(false);
-            }
+            let watermap = toWatermap(vTiles, heightmap.length);
 
             switch (mode) {
                 case 0:
-                    let citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
+                    citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
                     download('heightmap.raw', citiesmap);
                     break;
                 case 1:
-                    canvas = toCanvas(heightmap, watermap, xOffset, yOffset);
-                    url = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
-                    download('heightmap.png', null, url);
+                    citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
+                    png = UPNG.encodeLL([citiesmap], 1081, 1081, 1, 0, 16);
+                    download('heightmap.png', png);
                     break;
                 case 2:
                     updateInfopanel();
                     break;
                 case 3:
-                    canvas = toCanvas(heightmap, watermap, xOffset, yOffset);
-                    base64Canvas = canvas.toDataURL("image/png").split(';base64,')[1];
-                    downloadAsZip(base64Canvas, 1);
+                    citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
+                    png = UPNG.encodeLL([citiesmap], 1081, 1081, 1, 0, 16);
+                    downloadAsZip(png, 1);
                     break;
                 case 255:
                     canvas = toTerrainRGB(heightmap);
@@ -511,31 +582,50 @@ function getHeightmap(mode = 0) {
                     break;
             }
             console.log('complete in ', ticks * 10, ' ms');
+            pbElement.style.visibility = 'hidden';
+            pbElement.value = 0;
         }
 
         // timeout!
-        if (ticks >= 10000) {
+        if (ticks >= 1000) {
             clearInterval(timer);
-            console.log('timeout');
+            console.error('timeout!');
+            pbElement.value = 0;
         }
     }, 10);
 }
 
 function autoSettings(withMap = true) {
-    if (withMap) getHeightmap(2);
-    scope.baseLevel = grid.minHeight;
+    scope.mapSize = 17.28;
     scope.waterDepth = 5.0;
-    scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
-    scope.wsSlope = '16';
+    scope.wsSlope = 1;
+
+    mapSize = scope.mapSize / 1;
+    vmapSize = mapSize * 1.05;
+    tileSize = mapSize / 9;
+
+    if (withMap) {
+        new Promise((resolve) => {
+            getHeightmap(2, resolve);
+        }).then(() => {
+            scope.baseLevel = grid.minHeight;
+            scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
+        });
+    }
+
+    setGrid(grid.lng, grid.lat, vmapSize);
+
     document.getElementById('blurWs').checked = false;
     document.getElementById('drawStrm').checked = false;
+    document.getElementById('drawMarker').checked = false;
+    document.getElementById('drawGrid').checked = false;
 }
 
 function isDownloadComplete(tiles, vTiles) {
     let tileNum = tiles.length;
     for (let i = 0; i < tileNum; i++) {
         for (let j = 0; j < tileNum; j++) {
-            if (!(tiles[i][j] && vTiles[i][j])) return false;
+            if (!(tiles[i][j]) || !(vTiles[i][j])) return false;
         }
     }
     return true;
@@ -562,16 +652,17 @@ function toWatermap(vTiles, length) {
 
     for (let ty = 0; ty < tileCnt; ty++) {
         for (let tx = 0; tx < tileCnt; tx++) {
-            if (vTiles[ty][tx].layers.water != undefined) {   // judge by 'undefined'
-                let geo = vTiles[ty][tx].layers.water.feature(0).loadGeometry();
+            if (typeof vTiles[ty][tx] !== "boolean") {
+                if (vTiles[ty][tx].layers.water) {
+                    let geo = vTiles[ty][tx].layers.water.feature(0).loadGeometry();
 
-                for (let i = 0; i < geo.length; i++) {
-                    ctx.moveTo(Math.round(geo[i][0].x * coef + (tx * length / tileCnt)), Math.round(geo[i][0].y * coef + (ty * length / tileCnt)));
-                    for (let j = 1; j < geo[i].length; j++) {
-                        ctx.lineTo(Math.round(geo[i][j].x * coef + (tx * length / tileCnt)), Math.round(geo[i][j].y * coef + (ty * length / tileCnt)));
+                    for (let i = 0; i < geo.length; i++) {
+                        ctx.moveTo(Math.round(geo[i][0].x * coef + (tx * length / tileCnt)), Math.round(geo[i][0].y * coef + (ty * length / tileCnt)));
+                        for (let j = 1; j < geo[i].length; j++) {
+                            ctx.lineTo(Math.round(geo[i][j].x * coef + (tx * length / tileCnt)), Math.round(geo[i][j].y * coef + (ty * length / tileCnt)));
+                        }
                     }
                 }
-
             }
         }
     }
@@ -586,16 +677,17 @@ function toWatermap(vTiles, length) {
 
         for (let ty = 0; ty < tileCnt; ty++) {
             for (let tx = 0; tx < tileCnt; tx++) {
-                if (vTiles[ty][tx].layers.waterway != undefined) {   // judge by 'undefined'
-                    let geo = vTiles[ty][tx].layers.waterway.feature(0).loadGeometry();
+                if (typeof vTiles[ty][tx] !== "boolean") {
+                    if (vTiles[ty][tx].layers.waterway) {
+                        let geo = vTiles[ty][tx].layers.waterway.feature(0).loadGeometry();
 
-                    for (let i = 0; i < geo.length; i++) {
-                        ctx.moveTo(Math.round(geo[i][0].x * coef + (tx * length / tileCnt)), Math.round(geo[i][0].y * coef + (ty * length / tileCnt)));
-                        for (let j = 1; j < geo[i].length; j++) {
-                            ctx.lineTo(Math.round(geo[i][j].x * coef + (tx * length / tileCnt)), Math.round(geo[i][j].y * coef + (ty * length / tileCnt)));
+                        for (let i = 0; i < geo.length; i++) {
+                            ctx.moveTo(Math.round(geo[i][0].x * coef + (tx * length / tileCnt)), Math.round(geo[i][0].y * coef + (ty * length / tileCnt)));
+                            for (let j = 1; j < geo[i].length; j++) {
+                                ctx.lineTo(Math.round(geo[i][j].x * coef + (tx * length / tileCnt)), Math.round(geo[i][j].y * coef + (ty * length / tileCnt)));
+                            }
                         }
                     }
-
                 }
             }
         }
@@ -630,10 +722,16 @@ function setWatersideSlope(watermap, distance) {
     let kLen, dkLen;
 
     // base filter
+    /*
     let f = [[0.33],
-            [0.5],                  // dist = 2
-            [0.66, 0.33],           // dist = 3
-            [0.75, 0.5 , 0.25]];    // dist = 4
+            [0.5],                      // dist = 2
+            [0.66, 0.33],               // dist = 3
+            [0.75, 0.5, 0.25]];         // dist = 4
+    */
+    let f = [[0.111],
+            [0.250],                    // dist = 2
+            [0.444, 0.111],             // dist = 3
+            [0.563, 0.250, 0.063]];     // dist = 4
 
     if (distance < 2) {
         return src;
@@ -769,16 +867,17 @@ function blurWatermap(watermap) {
 function toHeightmap(tiles, distance) {
     let tileNum = tiles.length;
     let srcMap = Create2DArray(tileNum * 512, 0);
-    
-    // in heightmap, each pixel is treated as vertex data, and 1081px represents 1080 faces. therefore, 1px = 16m.
-    let heightmap = Create2DArray(Math.round(1081 * (distance + 0.016) / (mapSize + 0.016)), 0);
+
+    // in heightmap, each pixel is treated as vertex data, and 1081px represents 1080 faces
+    // therefore, "1px = 16m" when the map size is 17.28km
+    let heightmap = Create2DArray(Math.ceil(1080 * (distance / mapSize)), 0);
     let smSize = srcMap.length;
     let hmSize = heightmap.length;
     let r = (hmSize - 1) / (smSize - 1);
 
     for (let i = 0; i < tileNum; i++) {
         for (let j = 0; j < tileNum; j++) {
-            let tile = tiles[i][j].decode();
+            let tile = new Uint8Array(UPNG.toRGBA8(tiles[i][j])[0]);
             for (let y = 0; y < 512; y++) {
                 for (let x = 0; x < 512; x++) {
                     let tileIndex = y * 512 * 4 + x * 4;
@@ -840,77 +939,6 @@ function toTerrainRGB(heightmap) {
     return canvas;
 }
 
-function toCanvas(heightmap, watermap, xOffset, yOffset) {
-    let canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    canvas.width = 1081;
-    canvas.height = 1081;
-
-    let img = ctx.createImageData(1081, 1081);
-
-    // water depth is unaffected by height scale
-    let depthUnits = scope.waterDepth / 4;
-
-    let wMap;
-
-    let distSlope = scope.wsSlope / 16;
-
-    // option
-    if (document.getElementById('blurWs').checked) {
-        wMap = blurWatermap(setWatersideSlope(watermap, distSlope));
-    } else {
-        wMap = setWatersideSlope(watermap, distSlope);
-    }
-
-    // iterate over the heightmap
-    for (let y = 0; y < 1081; y++) {
-        for (let x = 0; x < 1081; x++) {
-
-            // scale the height, an integer in 0.1 meter resolution
-            // to 4 meters resolution, max is 1023m.
-            let height = (heightmap[y + yOffset][x + xOffset] / 10 - scope.baseLevel) / 4 * parseFloat(scope.heightScale) / 100;
-
-            // raise the land by the amount of water depth
-            // a height lower than baselevel is considered to be the below sea level and the height is set to 0
-            let h = Math.max(0, Math.round(height + (depthUnits * wMap[y + yOffset][x + xOffset])));
-
-            h = Math.min(255, h);
-
-            // calculate index in image
-            let index = y * 1081 * 4 + x * 4;
-
-            // create pixel
-            img.data[index + 0] = h;    // heightmap[y, x] / 10;  // red
-            img.data[index + 1] = h;    // green
-            img.data[index + 2] = h;    // blue
-            img.data[index + 3] = 255;  // alpha, 255 is full opaque
-        }
-    }
-
-    if (document.getElementById('drawGrid').checked) {
-        // draw a grid on the image
-        for (let y = 1; y < 1081; y++) {
-            for (let x = 1; x < 1081; x++) {
-
-                if (y % 120 == 0 || x % 120 == 0) {
-                    // calculate index in image
-                    let index = y * 1081 * 4 + x * 4;
-
-                    // create pixel
-                    img.data[index + 0] = 63;
-                    img.data[index + 1] = 63;
-                    img.data[index + 2] = 63;
-                }
-            }
-        }
-    }
-
-    ctx.putImageData(img, 0, 0);
-
-    return canvas;
-}
-
 function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
     // cities has L/H byte order
     let citiesmap = new Uint8ClampedArray(2 * 1081 * 1081);
@@ -919,7 +947,7 @@ function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
     // water depth is unaffected by height scale
     let depthUnits = scope.waterDepth / 0.015625;
 
-    let distSlope = scope.wsSlope / 16;
+    let distSlope = scope.wsSlope / 1;
 
     // option
     if (document.getElementById('blurWs').checked) {
@@ -949,11 +977,30 @@ function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
         }
     }
 
+    // draw a grid on the image
+    if (document.getElementById('drawGrid').checked) {
+        for (let y = 0; y < 1081; y++) {
+            for (let x = 0; x < 1081; x++) {
+
+                if (y % 120 == 0 || x % 120 == 0) {
+                    // calculate index in image
+                    let index = y * 1081 * 2 + x * 2;
+
+                    // create pixel
+                    citiesmap[index + 0] = 63;
+                    citiesmap[index + 1] = 255;
+                }
+            }
+        }
+    }
+
     // marker, upper left corner
-    citiesmap[0] = 255;
-    citiesmap[1] = 255;
-    citiesmap[2] = 0;
-    citiesmap[3] = 0;
+    if (document.getElementById('drawMarker').checked) {
+        citiesmap[0] = 255;
+        citiesmap[1] = 255;
+        citiesmap[2] = 0;
+        citiesmap[3] = 0;
+    }
 
     // log the correct bounding rect to the console
     let bounds = getExtent(grid.lng, grid.lat, mapSize);
@@ -980,17 +1027,58 @@ function download(filename, data, url = false) {
     document.body.removeChild(a)
 }
 
-async function downloadPbfToTile(url) {
-    let response = await fetch(url);
-    if (response.ok) {
-		let bufferRes = await response.arrayBuffer();
-        let tile = new VectorTile(new Protobuf(new Uint8Array(bufferRes)));
-        return tile;
-	} else {
-		console.error("downloadPbf error:", response.status);
-	}
+async function downloadPngToTile(url, withoutQueryUrl = url) {
+    const cachedRes = await caches.match(url, { ignoreSearch: true });
+    if (cachedRes && cachedRes.ok) {
+        console.log('terrain-rgb: load from cache');
+        let pngData = await cachedRes.arrayBuffer();
+        let png = UPNG.decode(pngData);
+        return png;
+    } else {
+        console.log('terrain-rgb: load by fetch, cache downloaded file');
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                let res = response.clone();
+                let pngData = await response.arrayBuffer();
+                let png = UPNG.decode(pngData);
+                cache.put(withoutQueryUrl, res);
+                return png;
+            } else {
+                throw new Error('download terrain-rgb error:', response.status);
+            }
+        } catch(e) {
+            console.log(e.message);
+        }
+    }
 }
 
+async function downloadPbfToTile(url, withoutQueryUrl = url) {
+    const cachedRes = await caches.match(url, { ignoreSearch: true });
+    if (cachedRes && cachedRes.ok) {
+        console.log('pbf: load from cache');
+        let data = await cachedRes.arrayBuffer();
+        let tile = new VectorTile(new Protobuf(new Uint8Array(data)));
+        return tile;
+    } else {
+        console.log('pbf: load by fetch, cache downloaded file');
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                let res = response.clone();
+                let data = await response.arrayBuffer();
+                let tile = new VectorTile(new Protobuf(new Uint8Array(data)));
+                cache.put(withoutQueryUrl, res);
+                return tile;
+            } else {
+                throw new Error('download Pbf error:', response.status);
+            }
+        } catch(e) {
+            console.log(e.message);
+            return true;
+        }
+    }
+}
 
 //Original by @Niharkanta1
 function downloadAsZip(data, mode){
@@ -1000,8 +1088,8 @@ function downloadAsZip(data, mode){
     var info = getInfo(filename);
     zip.file("info.txt", info);
     let imageName = mode==0? filename+".raw": (mode==1?filename+".png": filename+"-tiles.png");
-    zip.file(imageName, data, {base64: true});
-    zip.generateAsync({type:"blob"})
+    zip.file(imageName, data, {binary: true});
+    zip.generateAsync({type: "blob", compression: "DEFLATE", compressionOptions: { level: 1 }})
     .then(function(content) {
         download(filename+".zip", content);
     });
