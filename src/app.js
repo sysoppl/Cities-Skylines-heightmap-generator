@@ -1088,8 +1088,8 @@ function downloadAsZip(data, mode){
     var info = getInfo(filename);
     zip.file("info.txt", info);
     let imageName = mode==0? filename+".raw": (mode==1?filename+".png": filename+"-tiles.png");
-    zip.file(imageName, data, {base64: true});
-    zip.generateAsync({type:"blob"})
+    zip.file(imageName, data, {binary: true});
+    zip.generateAsync({type: "blob", compression: "DEFLATE", compressionOptions: { level: 1 }})
     .then(function(content) {
         download(filename+".zip", content);
     });
