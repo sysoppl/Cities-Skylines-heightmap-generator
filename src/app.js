@@ -540,7 +540,7 @@ function getHeightmap(mode = 0, callback) {
         if (isDownloadComplete(tiles, vTiles)) {
             console.log('download ok');
             clearInterval(timer);
-            let citiesmap, png, canvas, url, base64png;
+            let citiesmap, png, canvas, url;
 
             // heightmap size corresponds to 1081px map size
             let heightmap = toHeightmap(tiles, distance);
