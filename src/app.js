@@ -595,6 +595,34 @@ function getHeightmap(mode = 0, callback) {
     }, 10);
 }
 
+async function getMapImage() {
+    let bounds = getExtent(grid.lng, grid.lat, mapSize);
+    let minLng = Math.min(bounds.topleft[0], bounds.bottomright[0]);
+    let minLat = Math.min(bounds.topleft[1], bounds.bottomright[1]);
+    let maxLng = Math.max(bounds.topleft[0], bounds.bottomright[0]);
+    let maxLat = Math.max(bounds.topleft[1], bounds.bottomright[1]);
+
+    let url = 'https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/['
+        + minLng + ','
+        + minLat + ','
+        + maxLng + ','
+        + maxLat + ']/1280x1280@2x?access_token='
+        + mapboxgl.accessToken;
+
+    try {
+        const response = await fetch(url);
+        if (response.ok) {
+            let png = await response.blob();
+            download('map.png', png);
+            console.log(bounds.topleft[0], bounds.topleft[1], bounds.bottomright[0], bounds.bottomright[1]);
+        } else {
+            throw new Error('download map error:', response.status);
+        }
+    } catch(e) {
+        console.log(e.message);
+    }
+}
+
 function autoSettings(withMap = true) {
     scope.mapSize = 17.28;
     scope.waterDepth = 5.0;
