@@ -295,6 +295,31 @@ function deleteCaches() {
     }
 }
 
+function setMapStyle(el) {
+    const layerId = el.id;
+    let styleName = map.getStyle().metadata['mapbox:origin'];
+    if (!(styleName)) {
+        styleName = 'satellite-v9';
+    }
+    if (layerId != styleName) {
+        map.setStyle('mapbox://styles/mapbox/' + layerId);
+    }
+}
+
+function setLngLat() {
+    let lngInput = document.getElementById('lngInput');
+    let latInput = document.getElementById('latInput');
+
+    grid.lng = parseFloat(lngInput.value);
+    grid.lat = parseFloat(latInput.value);
+
+    setGrid(grid.lng, grid.lat, vmapSize);
+    map.panTo(new mapboxgl.LngLat(grid.lng, grid.lat));
+    saveSettings();
+    hideDebugLayer();
+    updateInfopanel();
+}
+
 function hideDebugLayer() {
     if (debug) map.setLayoutProperty('debugLayer', 'visibility', 'none');
     grid.minHeight = null;
