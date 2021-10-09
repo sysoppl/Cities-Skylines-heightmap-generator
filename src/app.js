@@ -421,7 +421,11 @@ function togglePanel(index) {
             break;
         case 1:
             if (!isOpens[1]) {
-                document.getElementById(map.getStyle().metadata['mapbox:origin']).checked = true;
+                let styleName = map.getStyle().metadata['mapbox:origin'];
+                if (!(styleName)) {
+                    styleName = 'satellite-v9';
+                }
+                document.getElementById(styleName).checked = true;
             }
             break;
         case 2:
