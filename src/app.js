@@ -8,7 +8,17 @@ var tileSize = 1.92;
 
 var grid = loadSettings();
 
+var mapCanvas;
+
 var cache;
+
+var panels = document.getElementsByClassName('panel');
+var icons = document.getElementsByClassName('icon');
+var iconClass = [];
+
+for (let i = 0; i < panels.length; i++) {
+    iconClass.push(icons[i].className);
+}
 
 let debug = !!new URL(window.location.href).searchParams.get('debug');
 let debugElements = document.getElementsByClassName('debug');
@@ -41,151 +51,7 @@ const pbElement = document.getElementById('progress');
 document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
 
 map.on('load', function () {
-    var canvas = map.getCanvasContainer();
-
-    map.addSource('grid', {
-        'type': 'geojson',
-        'data': getGrid(grid.lng, grid.lat, vmapSize)
-    });
-
-    map.addLayer({
-        'id': 'gridlines',
-        'type': 'fill',
-        'source': 'grid',
-        'paint': {
-            'fill-color': 'gray',
-            'fill-outline-color': 'gray',
-            'fill-opacity': 0.25
-        }
-    });
-
-    map.addSource('playable', {
-        'type': 'geojson',
-        'data': getGrid(grid.lng, grid.lat, vmapSize / 9 * 5)
-    });
-
-    map.addLayer({
-        'id': 'playablesquare',
-        'type': 'fill',
-        'source': 'playable',
-        'paint': {
-            'fill-color': 'green',
-            'fill-outline-color': 'green',
-            'fill-opacity': 0.3
-        }
-    });
-
-    map.addSource('start', {
-        'type': 'geojson',
-        'data': getGrid(grid.lng, grid.lat, vmapSize / 9)
-    });
-
-    map.addLayer({
-        'id': 'startsquare',
-        'type': 'fill',
-        'source': 'start',
-        'paint': {
-            'fill-color': 'blue',
-            'fill-outline-color': 'blue',
-            'fill-opacity': 0.1
-        }
-    });
-
-    map.addSource('mapbox-streets', {
-        type: 'vector',
-        url: 'mapbox://mapbox.mapbox-streets-v8'
-    });
-
-    map.addSource('contours', {
-        type: 'vector',
-        url: 'mapbox://mapbox.mapbox-terrain-v2'
-    });
-
-    map.addLayer({
-        'id': 'contours',
-        'type': 'line',
-        'source': 'contours',
-        'source-layer': 'contour',
-        'layout': {
-            'visibility': 'visible',
-            'line-join': 'round',
-            'line-cap': 'round'
-        },
-        'paint': {
-            'line-color': '#877b59',
-            'line-width': 0.25
-        }
-    });
-
-    map.addLayer({
-        'id': 'water-streets',
-        'source': 'mapbox-streets',
-        'source-layer': 'water',
-        'type': 'fill',
-        'paint': {
-            'fill-color': 'rgba(66,100,225, 0.3)',
-            'fill-outline-color': 'rgba(33,33,255, 1)'
-        }
-    });
-
-    // debug: area that is downloaded
-    if (debug) {
-        map.addSource('debug', {
-            'type': 'geojson',
-            // 'data': turf.squareGrid([0, 0, 0, 0], tileSize, { units: 'kilometers' })
-            'data': turf.bboxPolygon(turf.bbox(turf.lineString([0, 0], [0, 0])))
-        });
-
-        map.addLayer({
-            'id': 'debugLayer',
-            'type': 'line',
-            'source': 'debug',
-            'paint': {
-                'line-color': 'orangered',
-                'line-width': 1
-            },
-            'layout': {
-                'visibility': 'none'
-            },
-        });
-
-        document.getElementById('wMap-canvas').style.visibility = 'visible';
-        document.getElementById('dcBox').style.display = 'block';
-    }
-
-    map.on('mouseenter', 'startsquare', function () {
-        map.setPaintProperty('startsquare', 'fill-opacity', 0.3);
-        map.setPaintProperty('startsquare', 'fill-color', 'blue');
-        canvas.style.cursor = 'move';
-        hideDebugLayer()
-    });
-
-    map.on('mouseleave', 'startsquare', function () {
-        map.setPaintProperty('startsquare', 'fill-color', 'blue');
-        map.setPaintProperty('startsquare', 'fill-opacity', 0.1);
-        canvas.style.cursor = '';
-        saveSettings();
-    });
-
-    map.on('mousedown', 'startsquare', function (e) {
-        // Prevent the default map drag behavior.
-        e.preventDefault();
-
-        canvas.style.cursor = 'grab';
-
-        map.on('mousemove', onMove);
-        map.once('mouseup', onUp);
-    });
-
-    map.on('touchstart', 'startsquare', function (e) {
-        if (e.points.length !== 1) return;
-
-        // Prevent the default map drag behavior.
-        e.preventDefault();
-
-        map.on('touchmove', onMove);
-        map.once('touchend', onUp);
-    });
+    mapCanvas = map.getCanvasContainer();
 
     scope.mapSize = mapSize;
     scope.baseLevel = 0;
@@ -194,6 +60,14 @@ map.on('load', function () {
     scope.wsSlope = 1;
 
     caches.open('tiles').then((data) => cache = data);
+});
+
+map.on('style.load', function () {
+    addSource();
+    addLayer();
+    setDebug();
+
+    setMouse();
 
     showWaterLayer();
     showHeightLayer();
@@ -243,6 +117,158 @@ function onUp(e) {
 
     hideDebugLayer();
     updateInfopanel();
+}
+
+function addSource() {
+    map.addSource('grid', {
+        'type': 'geojson',
+        'data': getGrid(grid.lng, grid.lat, vmapSize)
+    });
+
+    map.addSource('playable', {
+        'type': 'geojson',
+        'data': getGrid(grid.lng, grid.lat, vmapSize / 9 * 5)
+    });
+
+    map.addSource('start', {
+        'type': 'geojson',
+        'data': getGrid(grid.lng, grid.lat, vmapSize / 9)
+    });
+
+    map.addSource('mapbox-streets', {
+        type: 'vector',
+        url: 'mapbox://mapbox.mapbox-streets-v8'
+    });
+
+    map.addSource('contours', {
+        type: 'vector',
+        url: 'mapbox://mapbox.mapbox-terrain-v2'
+    });
+}
+
+function addLayer() {
+    map.addLayer({
+        'id': 'gridlines',
+        'type': 'fill',
+        'source': 'grid',
+        'paint': {
+            'fill-color': 'gray',
+            'fill-outline-color': 'gray',
+            'fill-opacity': 0.25
+        }
+    });
+
+    map.addLayer({
+        'id': 'playablesquare',
+        'type': 'fill',
+        'source': 'playable',
+        'paint': {
+            'fill-color': 'green',
+            'fill-outline-color': 'green',
+            'fill-opacity': 0.3
+        }
+    });
+
+    map.addLayer({
+        'id': 'startsquare',
+        'type': 'fill',
+        'source': 'start',
+        'paint': {
+            'fill-color': 'blue',
+            'fill-outline-color': 'blue',
+            'fill-opacity': 0.1
+        }
+    });
+
+    map.addLayer({
+        'id': 'contours',
+        'type': 'line',
+        'source': 'contours',
+        'source-layer': 'contour',
+        'layout': {
+            'visibility': 'visible',
+            'line-join': 'round',
+            'line-cap': 'round'
+        },
+        'paint': {
+            'line-color': '#877b59',
+            'line-width': 0.25
+        }
+    });
+
+    map.addLayer({
+        'id': 'water-streets',
+        'source': 'mapbox-streets',
+        'source-layer': 'water',
+        'type': 'fill',
+        'paint': {
+            'fill-color': 'rgba(66,100,225, 0.3)',
+            'fill-outline-color': 'rgba(33,33,255, 1)'
+        }
+    });
+}
+
+function setDebug() {
+    // debug: area that is downloaded
+    if (debug) {
+        map.addSource('debug', {
+            'type': 'geojson',
+            // 'data': turf.squareGrid([0, 0, 0, 0], tileSize, { units: 'kilometers' })
+            'data': turf.bboxPolygon(turf.bbox(turf.lineString([0, 0], [0, 0])))
+        });
+
+        map.addLayer({
+            'id': 'debugLayer',
+            'type': 'line',
+            'source': 'debug',
+            'paint': {
+                'line-color': 'orangered',
+                'line-width': 1
+            },
+            'layout': {
+                'visibility': 'none'
+            },
+        });
+
+        document.getElementById('wMap-canvas').style.visibility = 'visible';
+        document.getElementById('dcBox').style.display = 'block';
+    }
+}
+
+function setMouse() {
+    map.on('mouseenter', 'startsquare', function () {
+        map.setPaintProperty('startsquare', 'fill-opacity', 0.3);
+        map.setPaintProperty('startsquare', 'fill-color', 'blue');
+        mapCanvas.style.cursor = 'move';
+        hideDebugLayer()
+    });
+
+    map.on('mouseleave', 'startsquare', function () {
+        map.setPaintProperty('startsquare', 'fill-color', 'blue');
+        map.setPaintProperty('startsquare', 'fill-opacity', 0.1);
+        mapCanvas.style.cursor = '';
+        saveSettings();
+    });
+
+    map.on('mousedown', 'startsquare', function (e) {
+        // Prevent the default map drag behavior.
+        e.preventDefault();
+
+        mapCanvas.style.cursor = 'grab';
+
+        map.on('mousemove', onMove);
+        map.once('mouseup', onUp);
+    });
+
+    map.on('touchstart', 'startsquare', function (e) {
+        if (e.points.length !== 1) return;
+
+        // Prevent the default map drag behavior.
+        e.preventDefault();
+
+        map.on('touchmove', onMove);
+        map.once('touchend', onUp);
+    });
 }
 
 function showHeightContours(el) {
@@ -371,16 +397,36 @@ function Create2DArray(rows, def = null) {
     return arr;
 }
 
-function togglePanel() {
-    let panel = document.getElementById('infopanel');
-    let icon = document.getElementById('panelicon');
-    let isOpen = panel.classList.contains('slide-in');
+function togglePanel(index) {
+    let isOpens = [];
+    for (let i = 0; i < panels.length; i++) {
+        isOpens.push(panels[i].classList.contains('slide-in'));
+    }
+    for (let i = 0; i < panels.length; i++) {
+        if (isOpens[i] && (i != index)) {
+            panels[i].setAttribute('class', 'panel slide-out');
+            icons[i].setAttribute('class', iconClass[i]);
+        }
+    }
 
-    panel.setAttribute('class', isOpen ? 'slide-out' : 'slide-in'); // removes also the hidden class!
-    icon.setAttribute('class', isOpen ? 'fas fa-info-circle' : 'fa fa-angle-left');
+    panels[index].setAttribute('class', isOpens[index] ? 'panel slide-out' : 'panel slide-in');
+    icons[index].setAttribute('class', isOpens[index] ? iconClass[index] : 'icon fas fa-angle-left');
 
-    if (!isOpen) {
-        getHeightmap(2);
+    // initial settings when each panel is opened
+    switch (index) {
+        case 0:
+            if (!isOpens[0]) {
+                getHeightmap(2);
+            }
+            break;
+        case 1:
+            if (!isOpens[1]) {
+                document.getElementById(map.getStyle().metadata['mapbox:origin']).checked = true;
+            }
+            break;
+        case 2:
+            // none
+            break;
     }
 }
 

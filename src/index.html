@@ -33,13 +33,15 @@
 <body class="row">
     <div class="sideBar column">
         <ul>
-            <li><a onclick="togglePanel()" title="Settings"><i id="panelicon" class="fas fa-info-circle"></i></a></li>
+            <li><a onclick="togglePanel(0)" title="Settings"><i class="icon fas fa-info-circle"></i></a></li>
+            <li><a onclick="togglePanel(1)" title="Change map style"><i class="icon fas fa-layer-group"></i></a></li>
+            <li><a onclick="togglePanel(2)" title="Set lng/lat"><i class="icon fas fa-map-marker-alt"></i></a></li>
         </ul>
         <ul class="fill">
-            <li><a onclick="getHeightmap()" title="Download RAW height map"><i class="fas fa-file-download"></i></a></li>
+            <li><a onclick="getHeightmap(0)" title="Download RAW height map"><i class="fas fa-file-download"></i></a></li>
             <li><a onclick="getHeightmap(1)" title="Download PNG height map"><i class="fas fa-file-image"></i></a></li>
             <li><a onclick="getMapImage()" title="Download map image"><i class="fas fa-map"></i></a></li>
-            <li><a onclick="getHeightmap(3)" title="Download ZIP with PNG and lon/lat informations"><i class="fas fa-file-archive"></i></a></li>
+            <li><a onclick="getHeightmap(3)" title="Download ZIP with PNG and lng/lat informations"><i class="fas fa-file-archive"></i></a></li>
         </ul>
         <ul class="fill">
             <li><a onclick="showHeightContours(this)" title="Show height contours" id="showHeightContours"><i class="fas fa-mountain"></i></a></li>
@@ -57,10 +59,12 @@
             <li><a href="#" onclick="getHeightmap(255)" title="Dwnload tiles map (Terrain-RGB)"><i class="fas fa-bug"></i></a></li>
         </ul>
     </div>
+
     <div class="fill wrapper">
         <div id="map" class="content"></div>
         <canvas id="wMap-canvas" width="400" height="400" ></canvas> <!-- for debug -->
-        <div id="infopanel" class="slide-out hidden">
+
+        <div id="infoPanel" class="panel slide-out hidden">
             <div id="geocoder" class="geocoder"></div>
             <div class="infotable">
                 <div class="info">
@@ -135,6 +139,30 @@
                 <!-- <p class="fill"></p> -->
                 <button onclick="getHeightmap(2)"><i class="fas fa-sync-alt"></i>Refresh</button>
                 <button onclick="autoSettings()"><i class="fas fa-cog"></i>Auto</button>
+            </div>
+        </div>
+
+        <div id="stylePanel" class="panel slide-out hidden">
+            <h3>Map style:</h3>
+            <div id="mapstyle">
+                <label for="streets-v11"><input id="streets-v11" type="radio" name="msGroup" value="streets" onclick="setMapStyle(this)">Streets</label>
+                <label for="outdoors-v11"><input id="outdoors-v11" type="radio" name="msGroup" value="outdoors" onclick="setMapStyle(this)">Outdoors</label>
+                <label for="satellite-v9"><input id="satellite-v9" type="radio" name="msGroup" value="satellite" onclick="setMapStyle(this)">Satellite</label>
+                <label for="light-v10"><input id="light-v10" type="radio" name="msGroup" value="light" onclick="setMapStyle(this)">Light</label>
+                <label for="dark-v10"><input id="dark-v10" type="radio" name="msGroup" value="dark" onclick="setMapStyle(this)">Dark</label>
+            </div>
+        </div>
+
+        <div id="pinPanel" class="panel slide-out hidden">
+            <h3>Lng / Lat:</h3>
+            <dl>
+                <div><dt>Longitude:</dt><dd><input type="text" id="lngInput"></dd><dd><abbr>&#176;</abbr></dd></div>
+                <div><dt>Latitude:</dt><dd><input type="text" id="latInput"></dd><dd><abbr>&#176;</abbr></dd></div>
+            </dl>
+            <hr>
+            <div class="footer">
+                <p class="fill"></p>
+                <button onclick="setLngLat()"><i class="fas fa-check"></i>Apply</button>
             </div>
         </div>
     </div>
