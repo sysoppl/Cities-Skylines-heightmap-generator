@@ -547,6 +547,7 @@ button {
     flex: 0 0 auto;
     font-size: 1rem;
     font-weight: bold;
+    line-height: 1rem;
     margin-left: 1em;
     margin-top: 1em;
     padding: 0.375em 16px 0.375em 12px;
@@ -562,6 +563,24 @@ button:active {
     box-shadow: 0 3px 4px 0 rgba(0,0,0,0.14), 0 3px 3px -2px rgba(0,0,0,0.12), 0 1px 8px 0 rgba(0,0,0,0.20);
     position: relative;
     top: 1px;
+}
+
+button.outline {
+    background-color: transparent;
+    border: 2px solid #a3a8ad;
+    box-shadow: none;
+    color: #676a6e;
+    padding: 0.375em 16px 0.375em 16px;
+}
+
+button.outline:hover {
+    background-color: #d5dce3;
+    box-shadow: none;
+    color: #5d6064;
+}
+
+button.outline:active {
+    box-shadow: none;
 }
 
 .fa-calculator {

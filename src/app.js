@@ -332,18 +332,33 @@ function setMapStyle(el) {
     }
 }
 
-function setLngLat() {
+function setLngLat(mode) {
     let lngInput = document.getElementById('lngInput');
     let latInput = document.getElementById('latInput');
 
-    grid.lng = parseFloat(lngInput.value);
-    grid.lat = parseFloat(latInput.value);
+    switch (mode) {
+        case 0:
+            lngInput.value = grid.lng;
+            latInput.value = grid.lat;
+            break;
+        case 1:
+            lngInput.value = '';
+            latInput.value = '';
+            break;
+        case 2:
+            if ((lngInput.value) && (latInput.value)) {
+                grid.lng = parseFloat(lngInput.value);
+                grid.lat = parseFloat(latInput.value);
 
-    setGrid(grid.lng, grid.lat, vmapSize);
-    map.panTo(new mapboxgl.LngLat(grid.lng, grid.lat));
-    saveSettings();
-    hideDebugLayer();
-    updateInfopanel();
+                setGrid(grid.lng, grid.lat, vmapSize);
+                map.panTo(new mapboxgl.LngLat(grid.lng, grid.lat));
+
+                saveSettings();
+                hideDebugLayer();
+                updateInfopanel();
+            }
+            break;
+    }
 }
 
 function hideDebugLayer() {
