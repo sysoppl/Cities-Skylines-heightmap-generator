@@ -689,7 +689,16 @@ dd.wsSlp {
     top: 2.5rem;
     visibility: hidden;
     width: 400px;
-    z-index: 1;
+}
+
+@media screen and (max-width: 480px) {
+    #wMap-canvas {
+        bottom: 2.5rem;
+        height: 250px;
+        right: 2.5rem;
+        top: auto;        
+        width: 250px;
+    }
 }
 
 progress {
