@@ -18,6 +18,12 @@ html {
     line-height: 1;
 }
 
+@media screen and (max-width: 480px) {
+    html {
+        font-size: 0.875rem;
+    }
+}
+
 body {
     height: 100%;
 }
@@ -195,6 +201,12 @@ dt {
 .mapboxgl-ctrl-geocoder--input {
     height: 2em;
 }
+
+.mapboxgl-ctrl-geocoder--icon,
+.mapboxgl-ctrl-geocoder--icon-search {
+    left: 0.4375rem;
+    top: 0.4375rem;
+  }
 
 .wrapper {
     position: relative;
