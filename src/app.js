@@ -677,7 +677,13 @@ async function getMapImage() {
     let maxLng = Math.max(bounds.topleft[0], bounds.bottomright[0]);
     let maxLat = Math.max(bounds.topleft[1], bounds.bottomright[1]);
 
-    let url = 'https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/['
+    let styleName = map.getStyle().metadata['mapbox:origin'];
+    if (!(styleName)) {
+        styleName = 'satellite-v9';
+    }
+
+    let url = 'https://api.mapbox.com/styles/v1/mapbox/'
+        + styleName + '/static/['
         + minLng + ','
         + minLat + ','
         + maxLng + ','
