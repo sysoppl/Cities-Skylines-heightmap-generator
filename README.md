@@ -2,7 +2,7 @@
 
 # Cities: Skylines online heightmap generator
 Online heightmap generator for Cities: Skylines
-**Check it: https://cs.heightmap.skydark.pl**
+**Check it: https://heightmap.skydark.pl**
  ---
  
 
