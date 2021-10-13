@@ -685,6 +685,35 @@ function getHeightmap(mode = 0, callback) {
     }, 10);
 }
 
+
+async function getOSMData() {
+    let bounds = getExtent(grid.lng, grid.lat, mapSize);
+    let minLng = Math.min(bounds.topleft[0], bounds.bottomright[0]);
+    let minLat = Math.min(bounds.topleft[1], bounds.bottomright[1]);
+    let maxLng = Math.max(bounds.topleft[0], bounds.bottomright[0]);
+    let maxLat = Math.max(bounds.topleft[1], bounds.bottomright[1]);
+
+    let url = 'https://overpass-api.de/api/map?bbox='
+        + minLng + ','
+        + minLat + ','
+        + maxLng + ','
+        + maxLat;
+
+    try {
+        const response = await fetch(url);
+        if (response.ok) {
+            let osm= await response.blob();
+            download('map.osm', osm);
+            console.log(bounds.topleft[0], bounds.topleft[1], bounds.bottomright[0], bounds.bottomright[1]);
+        } else {
+            throw new Error('download map error:', response.status);
+        }
+    } catch (e) {
+        console.log(e.message);
+    }
+}
+
+
 async function getMapImage() {
     let bounds = getExtent(grid.lng, grid.lat, mapSize);
     let minLng = Math.min(bounds.topleft[0], bounds.bottomright[0]);
