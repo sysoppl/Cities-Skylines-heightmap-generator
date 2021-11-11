@@ -54,7 +54,6 @@ map.on('load', function () {
     scope.mapSize = mapSize;
     scope.baseLevel = 0;
     scope.heightScale = 100;
-    scope.waterDepth = 5;
     scope.wsSlope = 1;
 
     caches.open('tiles').then((data) => cache = data);
@@ -83,6 +82,9 @@ map.on('click', function (e) {
 });
 
 map.on('idle', function () {
+    // waterdepth can be set if bindings.js is loaded (because of docReady) 
+    scope.waterDepth = parseInt(grid.waterDepth) || 40;
+
     saveSettings();
 });
 
@@ -387,18 +389,29 @@ function getGrid(lng, lat, size) {
 
 function loadSettings() {
     let grid = JSON.parse(localStorage.getItem('grid')) || {};
+    
+    // San Francisco
     grid.lng = parseFloat(grid.lng) || -122.43877;
     grid.lat = parseFloat(grid.lat) || 37.75152;
+    
     grid.zoom = parseFloat(grid.zoom) || 11.0;
+    
     grid.minHeight = parseFloat(grid.minHeight) || 0;
     grid.maxHeight = parseFloat(grid.maxHeight) || 0;
+    
     grid.heightContours = grid.heightContours || false;
     grid.waterContours = grid.waterContours || false;
+
+    document.getElementById('drawGrid').checked = grid.drawGrid || false;
+
     return grid;
 }
 
 function saveSettings() {
     grid.zoom = map.getZoom();
+    grid.drawGrid = document.getElementById('drawGrid').checked;
+    grid.waterDepth = parseInt(document.getElementById('waterDepth').value);
+    console.log(scope.waterDepth);
     localStorage.setItem('grid', JSON.stringify(grid));
 }
 
@@ -509,6 +522,7 @@ function setBaseLevel() {
         getHeightmap(2, resolve);
     }).then(() => {
         scope.baseLevel = grid.minHeight;
+        saveSettings();
     });
 }
 
@@ -517,6 +531,7 @@ function setHeightScale() {
         getHeightmap(2, resolve);
     }).then(() => {
         scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
+        saveSettings();
     });
 }
 
@@ -752,7 +767,7 @@ async function getMapImage() {
 
 function autoSettings(withMap = true) {
     scope.mapSize = 17.28;
-    scope.waterDepth = 5.0;
+    scope.waterDepth = 40;
     scope.wsSlope = 1;
 
     mapSize = scope.mapSize / 1;
