@@ -647,8 +647,12 @@ function getHeightmap(mode = 0, callback) {
 
             switch (mode) {
                 case 0:
+                    // never draw a grid on a raw heightmap
+                    let savedDrawGrid = document.getElementById('drawGrid').checked;
+                    document.getElementById('drawGrid').checked = false;
                     citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
                     download('heightmap.raw', citiesmap);
+                    document.getElementById('drawGrid').checked = savedDrawGrid;
                     break;
                 case 1:
                     citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
