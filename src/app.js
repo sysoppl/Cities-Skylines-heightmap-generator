@@ -26,13 +26,8 @@ if (debug) while (debugElements.length > 0) {
     debugElements[0].classList.remove('debug');
 }
 
-// MapBox API token
-var dateTime = new Date();
-var day = dateTime.getDate();
-if(day == 1 || day == 2 || day == 3 || day == 4 || day == 5 || day == 6 || day == 7) mapboxgl.accessToken = 'MAPBOX API TOKEN HERE';
-if(day == 8 || day == 9 || day == 10 || day == 11 || day == 12 || day == 13 || day == 14) mapboxgl.accessToken = 'MAPBOX API TOKEN HERE';
-if(day == 15 || day == 16 || day == 17 || day == 18 || day == 19 || day == 20 || day == 21) mapboxgl.accessToken = 'MAPBOX API TOKEN HERE';
-if(day == 22 || day == 23 || day == 24 || day == 25 || day == 26 || day == 27 || day == 28 || day == 29 || day == 30 || day == 31) mapboxgl.accessToken = 'MAPBOX API TOKEN HERE';
+// MapBox API token, temperate email for dev
+mapboxgl.accessToken = 'pk.eyJ1IjoiYmVydGRldm4iLCJhIjoiY2t2dXF1ZGhyMHlteTJ2bzJjZzE3M24xOCJ9.J5skknTRyh-6RoDWD4kw2w';
 
 var map = new mapboxgl.Map({
     container: 'map',                               // Specify the container ID
