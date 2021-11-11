@@ -411,7 +411,6 @@ function saveSettings() {
     grid.zoom = map.getZoom();
     grid.drawGrid = document.getElementById('drawGrid').checked;
     grid.waterDepth = parseInt(document.getElementById('waterDepth').value);
-    console.log(scope.waterDepth);
     localStorage.setItem('grid', JSON.stringify(grid));
 }
 
