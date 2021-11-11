@@ -8,122 +8,172 @@
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/destyle.css@1.0.15/destyle.css"/>
+
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.8.0/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v1.8.0/mapbox-gl.css' rel='stylesheet' />
+    <link rel='stylesheet'  href='https://api.mapbox.com/mapbox-gl-js/v1.8.0/mapbox-gl.css'/>
 
-    <script
-        src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.4.2/mapbox-gl-geocoder.min.js"></script>
-    <link rel="stylesheet"
-        href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.4.2/mapbox-gl-geocoder.css"
-        type="text/css" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.4.2/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.4.2/mapbox-gl-geocoder.css" type="text/css" />
 
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
-    <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+    <!-- Fixed no icons with new Font Awesome key -->
+    <script src="https://kit.fontawesome.com/9051d1b58c.js" crossorigin="anonymous"></script>
+    <!-- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
     <link rel="stylesheet" type="text/css" href="styles.css">
+
+	<!-- ANALYTICS SCRIPT -->
+
+	<!-- END OF ANALYTICS SCRIPT -->
+
 </head>
 
 <body class="row">
     <div class="sideBar column">
-        <ul class="menu-list">
-            <li class="menu-item"><a onclick="togglePanel()" title="open info panel">
-                    <i id="panelicon" class="fas fa-info-circle"></i></a></li>
+        <ul>
+            <li><a onclick="togglePanel(0)" title="Settings"><i class="icon fas fa-info-circle"></i></a></li>
+            <li><a onclick="togglePanel(1)" title="Change map style"><i class="icon fas fa-layer-group"></i></a></li>
+            <li><a onclick="togglePanel(2)" title="Set lng/lat"><i class="icon fas fa-map-marker-alt"></i></a></li>
         </ul>
-        <ul class="menu-list fill">
-            <li class="menu-item"><a onclick="getHeightmap()" title="download raw height map"><i
-                        class="fa fa-cloud-download-alt"></i></a>
-            </li>
-            <li class="menu-item debug"><a onclick="getHeightmap(1)" title="download image height map"><i
-                        class="fa fa-download"></i></a>
-            </li>
+        <ul class="fill">
+            <li><a onclick="getHeightmap(0)" title="Download RAW height map"><i class="fas fa-file-download"></i></a></li>
+            <li><a onclick="getHeightmap(1)" title="Download PNG height map"><i class="fas fa-file-image"></i></a></li>
+            <li><a onclick="getMapImage()" title="Download map image"><i class="fas fa-map"></i></a></li>
+            <li><a onclick="getHeightmap(3)" title="Download ZIP with PNG and lng/lat informations"><i class="fas fa-file-archive"></i></a></li>
+			<li><a onclick="getOSMData()" title="Download OSM map (long wait)"><i class="fas fa-road"></i></a></li>
         </ul>
-        <ul class="menu-list fill">
-            <li class="menu-item"><a onclick="showHeightContours(this)" title="show height contours"><i
-                        class="fas fa-mountain"></i></a>
-            </li>
-            <li class="menu-item"><a onclick="showWaterContours(this)" title="show water contours"><i
-                        class="fas fa-water"></i></a>
-            </li>
+        <ul class="fill">
+            <li><a onclick="showHeightContours(this)" title="Show height contours" id="showHeightContours"><i class="fas fa-mountain"></i></a></li>
+            <li><a onclick="showWaterContours(this)" title="Show water contours" id="showWaterContours"><i class="fas fa-water"></i></a></li>
         </ul>
-        <ul class="menu-list">
-            <li class="menu-item"><a onclick="zoomIn()" title="zoom in"><i class="fa fa-search-plus"></i></a></li>
-            <li class="menu-item"><a onclick="zoomOut()" title="zoom out"><i class=" fa fa-search-minus"></i></a></li>
+        <ul class="fill" id="dcBox">
+            <li><a onclick="deleteCaches()" title="Delete caches" id="deleteCaches"><i class="fas fa-database"></i><i class="fas fa-times"></i></a></li>
         </ul>
-        <ul class="menu-list">
-            <li class="menu-item"><a href="https://github.com/JBerg60/cities-heightmap" target="_blank" title="help"><i
-                        class="far fa-question-circle"></i></a></li>
-            <li class="menu-item debug"><a href="#" onclick="getHeightmap(255)" title="download tiles map"><i
-                        class="fa fa-bug"></i></a>
-            </li>
+        <ul>
+            <li><a onclick="zoomIn()" title="Zoom in"><i class="fas fa-search-plus"></i></a></li>
+            <li><a onclick="zoomOut()" title="Zoom out"><i class="fas fa-search-minus"></i></a></li>
+        </ul>
+        <ul>
+            <li><a href="https://github.com/sysoppl/cities-heightmap" target="_blank" title="Help"><i class="far fa-question-circle"></i></a></li>
+            <li><a href="#" onclick="getHeightmap(255)" title="Dwnload tiles map (Terrain-RGB)"><i class="fas fa-bug"></i></a></li>
         </ul>
     </div>
+
     <div class="fill wrapper">
         <div id="map" class="content"></div>
-        <div id="infopanel" class="slide-out hidden">
+        <canvas id="wMap-canvas" width="400" height="400" ></canvas> <!-- for debug -->
+
+        <div id="infoPanel" class="panel slide-out hidden">
             <div id="geocoder" class="geocoder"></div>
-            <table class="infotable">
-                <tbody>
-                    <tr>
-                        <td>longitude:</td>
-                        <td class="unit" id="lng"></td>
-                        <td>&#176;</td>
-                    </tr>
-                    <tr>
-                        <td>latitude:</td>
-                        <td class="unit" id="lat"></td>
-                        <td>&#176;</td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>min. height:</td>
-                        <td class="unit" id="minh"></td>
-                        <td>mtr.</td>
-                    </tr>
-                    <tr>
-                        <td>max. height:</td>
-                        <td class="unit" id="maxh"></td>
-                        <td>mtr.</td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Settings:</td>
-                    </tr>
-                    <tr>
-                        <td>sea level:</td>
-                        <td><input data-model="seaLevel" class="number-input" type="number"></td>
-                        <td>mtr.</td>
-                    </tr>
-                    <tr>
-                        <td>height scale:</td>
-                        <td><input class="number-input" type="number" data-model="heightScale" step="0.1"></td>
-                        <td>%</td>
-                    </tr>
-                    <tr>
-                        <td>below sea level:</td>
-                        <td><input class="number-input" type="number" data-model="depth" min="0" max="40" step="0.1">
-                        </td>
-                        <td>mtr.</td>
-                    </tr>
-                    <tr>
-                        <td>only raise land:</td>
-                        <td><input class="number-input" type="checkbox" id="landOnly"></td>
-                    </tr>
-                </tbody>
-            </table>
-            <hr />
-            <div class="row">
+            <div class="infotable">
+                <div class="info">
+                    <dl class="lnglat">
+                        <div><dt>Longitude:</dt><dd class="unit" id="lng"></dd><dd><abbr>&#176;</abbr></dd></div>
+                        <div><dt>Latitude:</dt><dd class="unit" id="lat"></dd><dd><abbr>&#176;</abbr></dd></div>
+                    </dl>
+                    <dl class="height">
+                        <div><dt>Min. height:</dt><dd class="unit" id="minh"></dd><dd><abbr>m</abbr></dd></div>
+                        <div><dt>Max. height:</dt><dd class="unit" id="maxh"></dd><dd><abbr>m</abbr></dd></div>
+                    </dl>
+                </div>
+                <h3>Settings:</h3>
+                <div class="settings">
+                    <header><h4>Size and scale</h4><hr></header>
+                    <dl>
+                        <dt>Map size:</dt>
+                            <dd><input type="range" data-model="mapSize" min="17.28" max="69.12" step="0.01" id="mapSize"
+                                onkeyup="changeMapsize(this)" onmouseup="changeMapsize(this)"></dd>
+                            <dd><input type="number" data-model="mapSize" min="17.28" max="69.12" step="0.01"
+                                onkeyup="changeMapsize(this)" onmouseup="changeMapsize(this)"></dd>
+                            <dd><abbr>km</abbr></dd>
+                        <dt>Base level:</dt>
+                            <dd><input type="range" data-model="baseLevel" min="-1023.9" max="1023.9" step="0.1" id="baseLevel"></dd>
+                            <dd><input type="number" data-model="baseLevel" min="-1023.9" max="1023.9" step="0.1"></dd>
+                            <dd><abbr>m</abbr></dd>
+                            <dd><button class="calc" onclick="setBaseLevel()"
+                                title="Set to the same value as Min. height"><i class="fas fa-calculator"></i></button></dd>
+                        <dt>Height scale:</dt>
+                            <dd><input type="range" data-model="heightScale" min="0" max="250" step="0.1" id="heightScale"></dd>
+                            <dd><input type="number" data-model="heightScale" step="0.1"></dd>
+                            <dd><abbr>%</abbr></dd>
+                            <dd><button class="calc" onclick="setHeightScale()"
+                                title="Set to the maximum scale possible with the current settings"><i class="fas fa-calculator"></i></button></dd>
+                         <dt class="withUnit">Reference height scale:</dt>
+                            <dd class="unit2" id="rHeightscale">100.0</dd>
+                            <dd><abbr>%</abbr></dd>
+                        </dl>
+                    <header><h4>Water area</h4><hr></header>
+                    <dl>
+                        <dt>Water depth:</dt>
+                            <dd><input type="range" data-model="waterDepth" min="0" max="40" step="0.1" id="waterDepth"></dd>
+                            <dd><input type="number" data-model="waterDepth" min="0" max="40" step="0.1"></dd>
+                            <dd><abbr>m</abbr></dd>
+                        <dt>Waterside slope:</dt>
+                            <dd><input type="range" data-model="wsSlope" min="1" max="4" step="1" id="wsSlope"></dd>
+                            <dd class="wsSlp">
+                                <select data-model="wsSlope">
+                                    <option id="ov1" value="1">16</option>
+                                    <option id="ov2" value="2">32</option>
+                                    <option id="ov3" value="3">48</option>
+                                    <option id="ov4" value="4">64</option>
+                                </select><i class="fas fa-chevron-down"></i></dd>
+                            <dd><abbr>m</abbr></dd>
+                        <dt class="withCb">Blur waterside:</dt>
+                            <dd><input type="checkbox" id="blurWs"><i class="fas fa-check"></i></dd>
+                        <dt class="withCb">Draw streams:</dt>
+                            <dd><input type="checkbox" id="drawStrm"><i class="fas fa-check"></i></dd>
+                    </dl>
+                    <header><h4>Options</h4><hr></header>
+                    <dl>
+                        <dt class="withCb">Draw marker:</dt>
+                            <dd><input type="checkbox" id="drawMarker"><i class="fas fa-check"></i></dd>
+                        <dt class="withCb">Draw grid:</dt>
+                            <dd><input type="checkbox" id="drawGrid"><i class="fas fa-check"></i></dd>
+                    </dl>
+                </div>
+            </div>
+            <hr>
+            <div class="footer">
+                <progress id="progress" value="0" max="500"></progress>
+                <!-- <p class="fill"></p> -->
+                <button onclick="getHeightmap(2)"><i class="fas fa-sync-alt"></i>Refresh</button>
+                <button onclick="autoSettings()"><i class="fas fa-cog"></i>Auto</button>
+            </div>
+        </div>
+
+        <div id="stylePanel" class="panel slide-out hidden">
+            <h3>Map style:</h3>
+            <div id="mapstyle">
+                <label for="streets-v11"><input id="streets-v11" type="radio" name="msGroup" value="streets" onclick="setMapStyle(this)">Streets</label>
+                <label for="outdoors-v11"><input id="outdoors-v11" type="radio" name="msGroup" value="outdoors" onclick="setMapStyle(this)">Outdoors</label>
+                <label for="satellite-v9"><input id="satellite-v9" type="radio" name="msGroup" value="satellite" onclick="setMapStyle(this)">Satellite</label>
+                <label for="light-v10"><input id="light-v10" type="radio" name="msGroup" value="light" onclick="setMapStyle(this)">Light</label>
+                <label for="dark-v10"><input id="dark-v10" type="radio" name="msGroup" value="dark" onclick="setMapStyle(this)">Dark</label>
+            </div>
+        </div>
+
+        <div id="pinPanel" class="panel slide-out hidden">
+            <h3>Lng / Lat:</h3>
+            <dl>
+                <div><dt>Longitude:</dt><dd><input type="text" id="lngInput"></dd><dd><abbr>&#176;</abbr></dd></div>
+                <div><dt>Latitude:</dt><dd><input type="text" id="latInput"></dd><dd><abbr>&#176;</abbr></dd></div>
+            </dl>
+            <hr>
+            <div class="footer">
                 <p class="fill"></p>
-                <button onclick="getHeightmap(2)"><i class="fa fa-sync-alt"></i>&nbsp;&nbsp;Refresh</button>
-                <button onclick="autoSettings()"><i class="fa fa-cog"></i>&nbsp;&nbsp;Auto settings</button>
+                <button onclick="setLngLat(0)" class="outline">Current pos.</button>
+                <button onclick="setLngLat(1)" class="outline">Clear</button>
+                <button onclick="setLngLat(2)"><i class="fas fa-check"></i>Apply</button>
             </div>
         </div>
     </div>
 
-    <script src="zlib.js"></script>
-    <script src="png.js"></script>
+    <script src="lib.js"></script>
+    <script src="jszip.js"></script>
+    <script src="pako.min.js"></script>
+    <script src="upng.js"></script>
     <script src='tiles.js'></script>
     <script src="binding.js"></script>
     <script src="app.js"></script>
