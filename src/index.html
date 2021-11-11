@@ -5,8 +5,8 @@
     <meta charset='utf-8' />
     <title>Cities: Skylines map generator</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/destyle.css@1.0.15/destyle.css"/>
 
@@ -95,8 +95,8 @@
                             <dd><button class="calc" onclick="setBaseLevel()"
                                 title="Set to the same value as Min. height"><i class="fas fa-calculator"></i></button></dd>
                         <dt>Height scale:</dt>
-                            <dd><input type="range" data-model="heightScale" min="0" max="250" step="0.1" id="heightScale"></dd>
-                            <dd><input type="number" data-model="heightScale" step="0.1"></dd>
+                            <dd><input type="range" data-model="heightScale" min="0" max="250" step="1" id="heightScale"></dd>
+                            <dd><input type="number" data-model="heightScale" step="1"></dd>
                             <dd><abbr>%</abbr></dd>
                             <dd><button class="calc" onclick="setHeightScale()"
                                 title="Set to the maximum scale possible with the current settings"><i class="fas fa-calculator"></i></button></dd>
@@ -107,8 +107,8 @@
                     <header><h4>Water area</h4><hr></header>
                     <dl>
                         <dt>Water depth:</dt>
-                            <dd><input type="range" data-model="waterDepth" min="0" max="40" step="0.1" id="waterDepth"></dd>
-                            <dd><input type="number" data-model="waterDepth" min="0" max="40" step="0.1"></dd>
+                            <dd><input type="range" data-model="waterDepth" min="0" max="60" step="1" id="waterDepth"></dd>
+                            <dd><input type="number" data-model="waterDepth" min="0" max="60" step="1"></dd>
                             <dd><abbr>m</abbr></dd>
                         <dt>Waterside slope:</dt>
                             <dd><input type="range" data-model="wsSlope" min="1" max="4" step="1" id="wsSlope"></dd>
@@ -175,7 +175,7 @@
     <script src="pako.min.js"></script>
     <script src="upng.js"></script>
     <script src='tiles.js'></script>
-    <script src="binding.js"></script>
+    <script src="binding.js"></script> <!-- needs to be loaded before app, for scope var-->
     <script src="app.js"></script>
 </body>
 
