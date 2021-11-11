@@ -13,7 +13,7 @@ let scope = {};
 function init() {
     // Loop through input elements
     for (let el of inputElements) {
-        if (el.tagName.toLowerCase() === 'input') {
+        if (el.tagName.toLowerCase() === 'input' || el.tagName.toLowerCase() === 'select') {
             // Get property name from each input with an attribute of 'data-model'
             let propName = el.getAttribute('data-model');
 

@@ -1,21 +1,36 @@
-# Cities: Skyline height map generator
-A accurate heightmap generator for Cities: Skylines.  
-Application: https://cities.heightmap.space
+*This is a fork of original heightmap builder (JBerg60/cities-heightmap)*
 
-## Objective
-The goal is to get a accurate height map for Cities: Skyline. 
+# Cities: Skylines online heightmap generator
+Online heightmap generator for Cities: Skylines
+**Check it: https://heightmap.skydark.pl**
+ ---
+ 
 
-## Current features
-- Height resolution 0.1 meters (cities resolution = 0.015 meters at 1:1 scale).  
-- Easy to use interface.  
-- takes a 18 x 18 km square from a map.
-- Can produce png and raw images. Use **raw** for highest accuracy. 
+## Features
+- easy to use interface
+- takes a 18 x 18 km square from a map
+- can produce png, raw images and zip packages
 
-## Tools needed
-Visual studio code or the editor of your choice.
+## How to
+1. Select area that you want to download  
+![obraz](https://user-images.githubusercontent.com/30871217/123680703-4ebaa880-d849-11eb-8b74-b254e91ef44d.png)  
+Green zone shows playable tiles
+
+
+2. Choose the options that suit you  
+![obraz](https://user-images.githubusercontent.com/30871217/123449129-aa7ffa00-d5db-11eb-9eb5-f2395dc4f173.png)
+
+3. To download use one of available options  
+![image](https://user-images.githubusercontent.com/30871217/132255804-7cbe3e0a-f3f0-4b19-bd2f-0cf434457f09.png)
+
 
 ## Info panel
-By clicking the i icon, a info panel is displayed. Longitude and Latitude as well as minimum and maximum height of the square are displayed. Clicking the refresh button will update these settings.
+You can modify settings in info panel for your height map so it fits your needs.  
+
+  ---------------------------
+  
+_Original text by original author below_
+
 
 ### Settings
 - **Sea level**: the height that will be used as sea level. For land adjacent to the sea or ocean, this will usual be 0.  
@@ -39,14 +54,3 @@ Sea level is set to 0 meters, Height scale to 300%, below sea level to 20 meters
 ## Frequently asked questions
 Q: when downloading the map Chrome says ```heightmap.raw is not commonly downloaded and may be dangerous```  
 A: just click on the arrow up and choose ```keep```. Height maps are not dangerous at al ;)
-
-## Planned enhancements
-- Possible adjustment of the 18 x 18 km square for getting maps.
-
-
-## final notes
-- displaying debug info is achieved by adding ```?debug=1``` to the url. A ```png``` map is added, as well as a heatmap and a rectangle of the tiles that are downloaded.
-- due to the nature of mother earth (it is a cube), it is not possible to achive 100%  accuracy near the poles. However, the center square is always at the correct position.
-
-![Golden gate](/images/goldengate.jpg)
-San Francisco, where the Golden Gate bridge will be build. Scale 100%, sea level rise 5 meter.
