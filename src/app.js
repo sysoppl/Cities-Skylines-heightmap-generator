@@ -1142,7 +1142,7 @@ function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
                     let index = y * 1081 * 2 + x * 2;
 
                     // create pixel
-                    citiesmap[index + 0] = 63;
+                    citiesmap[index + 0] = 127;
                     citiesmap[index + 1] = 255;
                 }
             }
