@@ -108,7 +108,25 @@
                         <dt>Water depth:</dt>
                             <dd><input type="range" data-model="waterDepth" min="0" max="60" step="1" id="waterDepth"></dd>
                             <dd><input type="number" data-model="waterDepth" min="0" max="60" step="1"></dd>
-                            <dd><abbr>m</abbr></dd>                        
+                            <dd><abbr>m</abbr></dd>                                                
+                        <dt>Center of gravity:</dt>
+                        <dd class="wsSlp">
+                            <select data-model="gravityCenter">
+                                <option id="ov1" value="0">None</option>
+                                <option id="ov2" value="1">Center</option>
+                                <option id="ov3" value="2">North</option>
+                                <option id="ov3" value="3">North-East</option>
+                                <option id="ov4" value="4">East</option>
+                                <option id="ov3" value="5">South-East</option>
+                                <option id="ov4" value="6">South</option>
+                                <option id="ov3" value="7">South-West</option>
+                                <option id="ov4" value="8">West</option>
+                                <option id="ov3" value="9">North-West</option>
+                            </select><i class="fas fa-chevron-down"></i>
+                        </dd>
+                        <dd>@&nbsp;&nbsp;</dd>
+                        <dd><input type="number" min="0" max="250" step="1" id="tiltHeight"></dd>
+                        <dd><abbr>m</abbr></dd>
                         <dt class="withCb">Streams:</dt>
                             <dd><input type="checkbox" id="drawStrm"><i class="fas fa-check"></i></dd>
                     </dl>

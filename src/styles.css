@@ -641,6 +641,7 @@ button.calc:active {
 
 dd.wsSlp {
     position: relative;
+    margin-right: 1em;
 }
 
 .wsSlp select {
@@ -657,10 +658,10 @@ dd.wsSlp {
     margin-right: 0.375rem;
     overflow: hidden;
     padding-right: 0.9375em;
-    text-align: right;
+    text-align: left;
     transition: width 0.25s, min-width 0.25s;
     white-space: nowrap;
-    width: 4.25em;
+    width: 5em;
 }
 
 @-moz-document url-prefix() {

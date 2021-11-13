@@ -85,8 +85,9 @@ map.on('click', function (e) {
 });
 
 map.on('idle', function () {
-    // waterdepth can be set if bindings.js is loaded (because of docReady) 
+    // scope can be set if bindings.js is loaded (because of docReady) 
     scope.waterDepth = parseInt(grid.waterDepth) || 50;
+    scope.gravityCenter = parseInt(grid.gravityCenter) || 0;
 
     saveSettings();
 });
@@ -407,6 +408,7 @@ function loadSettings() {
 
     // TODO: do not set global vars!
     document.getElementById('waterDepth').value = parseInt(stored.waterDepth) || defaultWaterdepth;
+    document.getElementById('tiltHeight').value = parseInt(stored.tiltHeight) || parseInt(stored.waterDepth / 2);
 
     document.getElementById('drawGrid').checked = stored.drawGrid || false;
     document.getElementById('drawStrm').checked = stored.drawStreams || false;
@@ -432,6 +434,9 @@ function saveSettings() {
     grid.blurPasses = parseInt(document.getElementById('blurPasses').value);
     grid.blurPostPasses = parseInt(document.getElementById('blurPostPasses').value);
     grid.streamDepth = parseInt(document.getElementById('streamDepth').value);
+
+    grid.gravityCenter = scope.gravityCenter;
+    grid.tiltHeight = parseInt(document.getElementById('tiltHeight').value);
 
     localStorage.setItem('grid', JSON.stringify(grid));
 }
@@ -511,6 +516,9 @@ function calcMinMaxHeight(heightmap, xOffset, yOffset) {
     for (let y = yOffset; y < yOffset + 1081; y++) {
         for (let x = xOffset; x < yOffset + 1081; x++) {
             let h = heightmap[y][x];
+            if(h < 0) {
+                console.log(h, y, x);
+            }
             if (h > maxHeight) maxHeight = h;
             if (h < minHeight) minHeight = h;
         }
@@ -949,6 +957,73 @@ function filterMap(map, fromLevel, toLevel, kernel) {
     return filteredMap;
 }
 
+function tiltMap(map, gravityCenter, waterDepth) {
+    const maxY = map.length;
+    const maxX = map[0].length;
+    
+    const tiltedMap = Create2DArray(maxY, 0);
+    let gravityPoint = {};
+
+    switch(gravityCenter) {
+        case 1: // center
+            gravityPoint.x = parseInt(maxX / 2);
+            gravityPoint.y = parseInt(maxY / 2);
+            break;
+        case 2: // North
+            gravityPoint.x = parseInt(maxX / 2);
+            gravityPoint.y = 0;
+            break;
+        case 3: // North - East
+            gravityPoint.x = maxX;
+            gravityPoint.y = 0;
+            break;
+        case 4: // East
+            gravityPoint.x = maxX;
+            gravityPoint.y = parseInt(maxY  / 2);
+            break;
+        case 5: // South - East
+            gravityPoint.x = maxX;
+            gravityPoint.y = maxY;
+            break;
+        case 6: // South
+            gravityPoint.x = parseInt(maxX / 2);
+            gravityPoint.y = maxY;
+            break;
+        case 7: // South - West
+            gravityPoint.x = 0;
+            gravityPoint.y = maxY;
+            break;
+        case 8: // West
+            gravityPoint.x = 0;
+            gravityPoint.y = parseInt(maxY / 2);
+            break;
+        case 9: // North - West
+            gravityPoint.x = 0;
+            gravityPoint.y = 0;
+            break;
+        default:
+            // do nothing
+    }
+
+    for (let y = 0; y < maxY; y++) {
+        for (let x = 0; x < maxX; x++) {
+            let h = map[y][x];
+            let correction = 0; 
+            
+            //calculate the distance to the gravity center
+            if('x' in gravityPoint) {
+                //pythagoras for distance
+                let relDistance = Math.sqrt(Math.pow(gravityPoint.x - x, 2) + Math.pow(gravityPoint.y - y, 2)) / maxY;
+                correction = Math.round(waterDepth * relDistance * 100) / 100;
+            }
+
+            tiltedMap[y][x] = h + correction;
+        }
+    }
+
+    return tiltedMap;
+}
+
 function toHeightmap(tiles, distance) {
     let tileNum = tiles.length;
     let srcMap = Create2DArray(tileNum * 512, 0);
@@ -1074,6 +1149,10 @@ function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
             }
         }
     }
+
+    // tilt the map in a direction of gravity, so water always flows to the lowest point
+    let tiltHeight = parseInt(document.getElementById('tiltHeight').value);
+    normalizedMap = tiltMap(normalizedMap, scope.gravityCenter, tiltHeight);
 
     // finally, finish the drawn streams with a light smoothing
     // the streams are drawn over the entire map, so post process the entire map
