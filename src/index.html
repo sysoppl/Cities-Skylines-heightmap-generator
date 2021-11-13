@@ -78,7 +78,6 @@
                         <div><dt>Max. height:</dt><dd class="unit" id="maxh"></dd><dd><abbr>m</abbr></dd></div>
                     </dl>
                 </div>
-                <h3>Settings:</h3>
                 <div class="settings">
                     <header><h4>Size and scale</h4><hr></header>
                     <dl>
@@ -109,31 +108,40 @@
                         <dt>Water depth:</dt>
                             <dd><input type="range" data-model="waterDepth" min="0" max="60" step="1" id="waterDepth"></dd>
                             <dd><input type="number" data-model="waterDepth" min="0" max="60" step="1"></dd>
-                            <dd><abbr>m</abbr></dd>
-                        <dt>Waterside slope:</dt>
-                            <dd><input type="range" data-model="wsSlope" min="1" max="4" step="1" id="wsSlope"></dd>
-                            <dd class="wsSlp">
-                                <select data-model="wsSlope">
-                                    <option id="ov1" value="1">16</option>
-                                    <option id="ov2" value="2">32</option>
-                                    <option id="ov3" value="3">48</option>
-                                    <option id="ov4" value="4">64</option>
-                                </select><i class="fas fa-chevron-down"></i></dd>
-                            <dd><abbr>m</abbr></dd>
-                        <dt class="withCb">Blur waterside:</dt>
-                            <dd><input type="checkbox" id="blurWs"><i class="fas fa-check"></i></dd>
-                        <dt class="withCb">Draw streams:</dt>
+                            <dd><abbr>m</abbr></dd>                        
+                        <dt class="withCb">Streams:</dt>
                             <dd><input type="checkbox" id="drawStrm"><i class="fas fa-check"></i></dd>
                     </dl>
-                    <header><h4>Options</h4><hr></header>
+                    <header><h4>Draw options</h4><hr></header>
                     <dl>
-                        <dt class="withCb">Draw marker:</dt>
-                            <dd><input type="checkbox" id="drawMarker"><i class="fas fa-check"></i></dd>
-                        <dt class="withCb">Draw grid:</dt>
-                            <dd><input type="checkbox" id="drawGrid"><i class="fas fa-check"></i></dd>
-                    </dl>
+                        <dt class="withCb">Marker: </dt>
+                        <dd><input type="checkbox" id="drawMarker"><i class="fas fa-check"></i></dd>
+                        <dt></dt>
+                        <dt class="withCb">Grid: </dt>
+                        <dd><input type="checkbox" id="drawGrid"><i class="fas fa-check"></i></dd>
+                    </dl>                   
+                    <header><h4>Smoothing</h4><hr></header>
+                    <div class="row">                    
+                        <div>
+                            <div class="vertinput">To (m)</div>                           
+                            <div><dd><input type="number" min="0" max="250" step="10" id="plainsHeight"></dd></div>
+                        </div>
+                        <div>
+                            <div class="vertinput">Passes</div>                           
+                            <div><dd><input type="number" min="0" max="25" step="1" id="blurPasses"></dd></div>
+                        </div>
+                        <div>
+                            <div class="vertinput">Post pas.</div>                           
+                            <div><dd><input type="number" min="0" max="10" step="1" id="blurPostPasses"></dd></div>
+                        </div>                        
+                        <div>
+                            <div class="vertinput">Stream depth</div>                           
+                            <div><dd><input type="number" min="0" max="10" step="1" id="streamDepth"></dd></div>
+                        </div>                        
+                    </div>
                 </div>
             </div>
+            <br>
             <hr>
             <div class="footer">
                 <progress id="progress" value="0" max="500"></progress>

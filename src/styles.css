@@ -328,9 +328,16 @@ dt {
     width: 7.75em;
 }
 
-.settings dt.withCb {
-    width: 15.625em;
+.vertinput {
+    height: 1.375em;
+    line-height: 1.375em;
+    margin-bottom: 0.3em;
 }
+
+.settings dt.withCb {
+    width: 5em;
+}
+
 
 .settings dd:last-child {
     width: 1.5em;
