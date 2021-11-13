@@ -508,23 +508,42 @@ function togglePanel(index) {
     }
 }
 
-function calcMinMaxHeight(heightmap, xOffset, yOffset) {
-    let minHeight = 100000;
-    let maxHeight = -100000;
+function sanatizeMap(map, xOffset, yOffset) {
+    const sanatizedMap = Create2DArray(1081, 0);
 
     // iterate over the heightmap
     for (let y = yOffset; y < yOffset + 1081; y++) {
         for (let x = xOffset; x < yOffset + 1081; x++) {
-            let h = heightmap[y][x];
+            let h = map[y][x];
+
             if(h < 0) {
-                console.log(h, y, x);
-            }
-            if (h > maxHeight) maxHeight = h;
-            if (h < minHeight) minHeight = h;
+                console.log(h);
+            }            
+
+            sanatizedMap[y - yOffset][x - xOffset] = h;
         }
     }
-    grid.minHeight = minHeight / 10;
-    grid.maxHeight = maxHeight / 10;
+
+    return sanatizedMap;
+}
+
+function calcMinMaxHeight(map) {
+    const maxY = map.length; 
+    const maxX = map[0].length;
+
+    const heights = {min: 100000, max: -100000}
+
+    for (let y = 0; y < maxY; y++) {
+        for (let x = 0; x < maxX; x++) {
+            let h = map[y][x];
+            if (h > heights.max) heights.max = h;
+            if (h < heights.min) heights.min = h;
+        }
+    }
+
+    heights.min = heights.min / 10;
+    heights.max = heights.max / 10;
+    return heights;
 }
 
 function updateInfopanel() {
@@ -691,7 +710,11 @@ function getHeightmap(mode = 0, callback) {
             let xOffset = Math.round(leftDistance / distance * heightmap.length);
             let yOffset = Math.round(topDistance / distance * heightmap.length);
 
-            calcMinMaxHeight(heightmap, xOffset, yOffset);
+            let sanatizedMap = sanatizeMap(heightmap, xOffset, yOffset);
+
+            let heights = calcMinMaxHeight(sanatizedMap); 
+            grid.minHeight = heights.min;
+            grid.maxHeight = heights.max;
 
             pbElement.value = 500;
             // callback after height calculation is completed
