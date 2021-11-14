@@ -4,7 +4,20 @@
 
 const defaultWaterdepth = 40;
 
-const meanKernel = [ [1,1,1], [1,1,1], [1,1,1] ]; 
+// see: https://www.taylorpetrick.com/blog/post/convolution-part3
+const meanKernel = [ 
+    [1, 1, 1], 
+    [1, 1, 1], 
+    [1, 1, 1] 
+]; 
+
+const sharpenKernel = [ 
+    [-0.00391, -0.01563, -0.02344, -0.01563, -0.00391], 
+    [-0.01563, -0.06250, -0.09375, -0.06250, -0.01563],
+    [-0.02344, -0.09375, +1.85980, -0.09375, -0.02344], 
+    [-0.01563, -0.06250, -0.09375, -0.06250, -0.01563],
+    [-0.00391, -0.01563, -0.02344, -0.01563, -0.00391] 
+]; 
 
 var vmapSize = 18.144;
 var mapSize = 17.28;
@@ -509,22 +522,47 @@ function togglePanel(index) {
 }
 
 function sanatizeMap(map, xOffset, yOffset) {
-    const sanatizedMap = Create2DArray(1081, 0);
+    const citiesmapSize = 1081;
+    let sanatizedMap = Create2DArray(citiesmapSize, 0);
 
-    // iterate over the heightmap
-    for (let y = yOffset; y < yOffset + 1081; y++) {
-        for (let x = xOffset; x < yOffset + 1081; x++) {
-            let h = map[y][x];
+    let lowestPositve = 100000;
 
-            if(h < 0) {
-                console.log(h);
-            }            
-
+    // pass 1: normalize the map, and determine the lowestPositve
+    for (let y = yOffset; y < yOffset + citiesmapSize; y++) {
+        for (let x = xOffset; x < xOffset + citiesmapSize; x++) {
+            let h = map[y][x]; 
+            if(h >= 0 && h < lowestPositve) {
+                lowestPositve = h;
+            }                  
             sanatizedMap[y - yOffset][x - xOffset] = h;
         }
     }
 
+    // pass 2: fix negative heights artifact in mapbox maps
+    for (let y = 0; y < citiesmapSize; y++) {
+        for (let x = 0; x < citiesmapSize; x++) {
+            let h = sanatizedMap[y][x];
+            if(h < 0) {
+                sanatizedMap[y][x] = lowestPositve;                
+            }
+        }
+    }
+
     return sanatizedMap;
+}
+
+function sanatizeWatermap(map, xOffset, yOffset) {
+    const citiesmapSize = 1081;
+    let watermap = Create2DArray(citiesmapSize, 0);
+
+    for (let y = yOffset; y < yOffset + citiesmapSize; y++) {
+        for (let x = xOffset; x < yOffset + citiesmapSize; x++) {
+            let h = map[y][x];
+            watermap[y - yOffset][x - xOffset] = h;
+        }
+    }
+
+    return watermap;
 }
 
 function calcMinMaxHeight(map) {
@@ -534,15 +572,16 @@ function calcMinMaxHeight(map) {
     const heights = {min: 100000, max: -100000}
 
     for (let y = 0; y < maxY; y++) {
-        for (let x = 0; x < maxX; x++) {
+        for (let x = 0; x < maxX; x++) {            
             let h = map[y][x];
             if (h > heights.max) heights.max = h;
-            if (h < heights.min) heights.min = h;
+            if (h < heights.min) heights.min = h;            
         }
     }
 
     heights.min = heights.min / 10;
     heights.max = heights.max / 10;
+    
     return heights;
 }
 
@@ -720,19 +759,19 @@ function getHeightmap(mode = 0, callback) {
             // callback after height calculation is completed
             if (typeof callback === 'function') callback();
 
-            let watermap = toWatermap(vTiles, heightmap.length);
+            let watermap = sanatizeWatermap(toWatermap(vTiles, heightmap.length), xOffset, yOffset);
 
             switch (mode) {
                 case 0:
                     // never draw a grid on a raw heightmap
                     let savedDrawGrid = document.getElementById('drawGrid').checked;
                     document.getElementById('drawGrid').checked = false;
-                    citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
+                    citiesmap = toCitiesmap(sanatizedMap, watermap);
                     download('heightmap.raw', citiesmap);
                     document.getElementById('drawGrid').checked = savedDrawGrid;
                     break;
                 case 1:
-                    citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
+                    citiesmap = toCitiesmap(sanatizedMap, watermap);
                     png = UPNG.encodeLL([citiesmap], 1081, 1081, 1, 0, 16);
                     download('heightmap.png', png);
                     break;
@@ -740,7 +779,7 @@ function getHeightmap(mode = 0, callback) {
                     updateInfopanel();
                     break;
                 case 3:
-                    citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
+                    citiesmap = toCitiesmap(sanatizedMap, watermap);
                     png = UPNG.encodeLL([citiesmap], 1081, 1081, 1, 0, 16);
                     downloadAsZip(png, 1);
                     break;
@@ -756,7 +795,7 @@ function getHeightmap(mode = 0, callback) {
         }
 
         // timeout!
-        if (ticks >= 2000) {
+        if (ticks >= 4096) {
             clearInterval(timer);
             console.error('timeout!');
             pbElement.value = 0;
@@ -966,8 +1005,8 @@ function filterMap(map, fromLevel, toLevel, kernel) {
                 for(let i = -kernelDist; i <= kernelDist; i++) {
                     for(let j = -kernelDist; j <= kernelDist; j++) {
                         if (y+i >=0 && y+i < maxY && x+j >= 0 && x+j < maxX) {
-                            cnt++;
-                            sum += map[y+i][x+j] * kernel[i+kernelDist][j+kernelDist];
+                            cnt += kernel[i+kernelDist][j+kernelDist];
+                            sum += map[y+i][x+j] * kernel[i+kernelDist][j+kernelDist];                            
                         }
                     }
                 }
@@ -1122,81 +1161,80 @@ function toTerrainRGB(heightmap) {
     return canvas;
 }
 
-function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
-    // cities has L/H byte order
-    let citiesmap = new Uint8ClampedArray(2 * 1081 * 1081);
-    let normalizedMap = Create2DArray(1081, 0); 
-    let normalizedWaterMap = Create2DArray(1081, 0); 
-    
-    // normalize the watermap. 0=water, 1=land
-    for (let y = 0; y < 1081; y++) {
-        for (let x = 0; x < 1081; x++) {
-            normalizedWaterMap[y][x] = watermap[y + yOffset][x + xOffset];
-        }
-    }
+function toCitiesmap(heightmap, watermap) {
+    const citiesmapSize = 1081;
 
-    for (let y = 0; y < 1081; y++) {
-        for (let x = 0; x < 1081; x++) {
+    // cities has L/H byte order
+    let citiesmap = new Uint8ClampedArray(2 * citiesmapSize * citiesmapSize);
+    let workingmap = Create2DArray(citiesmapSize, 0); 
+    
+    // watermap: => normalized depth between 0 => deepest water, 1 => land
+
+    for (let y = 0; y < citiesmapSize; y++) {
+        for (let x = 0; x < citiesmapSize; x++) {
             // stay with ints as long as possible
-            let height = (heightmap[y + yOffset][x + xOffset] - scope.baseLevel * 10);
+            let height = (heightmap[y][x] - scope.baseLevel * 10);
             
             // raise the land by the amount of water depth
             // a height lower than baselevel is considered to be the below sea level and the height is set to 0
             // water depth is unaffected by height scale
             // make sure the map has no heigher points as 1024 meters
-            let calcHeight = (height + Math.round(scope.waterDepth * 10 *normalizedWaterMap[y][x])) / 10;
-            normalizedMap[y][x] = Math.min(1024, Math.max(0, calcHeight));                       
+            let calcHeight = (height + Math.round(scope.waterDepth * 10 * watermap[y][x])) / 10;
+            workingmap[y][x] = Math.min(1024, Math.max(0, calcHeight));                       
         }
     }
 
     // smooth the plains and wateredges in a number of passes
     let passes = parseInt(document.getElementById('blurPasses').value);
+    let postPasses = parseInt(document.getElementById('blurPostPasses').value);
     let plainsHeight = parseInt(document.getElementById('plainsHeight').value);
     for(let l=0; l<passes; l++) {
-        normalizedMap = filterMap(normalizedMap, 0, plainsHeight + scope.waterDepth, meanKernel);
+        workingmap = filterMap(workingmap, 0, plainsHeight + scope.waterDepth, meanKernel);
     }
+
+    // sharpen the mountains, for more dramatic effect
+    for(let l=0; l<postPasses; l++) {
+        workingmap = filterMap(workingmap, plainsHeight + scope.waterDepth, grid.maxHeight, sharpenKernel);
+    } 
 
     // if there where enough passes, all the small streams on the plains are faded.
     // so redraw them, with little extra depth
     let streamDepth = parseInt(document.getElementById('streamDepth').value);
     let highestWaterHeight = 0;
     if(document.getElementById('drawStrm').checked) {
-            for (let y = 0; y < 1081; y++) {
-            for (let x = 0; x < 1081; x++) {
-                if(normalizedWaterMap[y][x] == 1 && normalizedMap[y][x] > scope.baseLevel + streamDepth) {
-                    if(normalizedMap[y][x] > highestWaterHeight) {
-                        highestWaterHeight = normalizedMap[y][x];
-                    }                   
-                    normalizedMap[y][x] -= streamDepth;
-                }
+            for (let y = 0; y < citiesmapSize; y++) {
+            for (let x = 0; x < citiesmapSize; x++) {
+                if(workingmap[y][x] > highestWaterHeight) {
+                        highestWaterHeight = workingmap[y][x];
+                }                   
+                workingmap[y][x] -= (1 - watermap[y][x]) * streamDepth;                
             }
         }
     }
 
-    // tilt the map in a direction of gravity, so water always flows to the lowest point
+    // tilt the map in the direction of gravity, so water always flows to the lowest point
     let tiltHeight = parseInt(document.getElementById('tiltHeight').value);
-    normalizedMap = tiltMap(normalizedMap, scope.gravityCenter, tiltHeight);
+    workingmap = tiltMap(workingmap, scope.gravityCenter, tiltHeight);
 
     // finally, finish the drawn streams with a light smoothing
     // the streams are drawn over the entire map, so post process the entire map
-    let postPasses = parseInt(document.getElementById('blurPostPasses').value);
     for(let l=0; l<postPasses; l++) {
-        normalizedMap = filterMap(normalizedMap, 0, highestWaterHeight, meanKernel);
-    } 
+        workingmap = filterMap(workingmap, 0, highestWaterHeight, meanKernel);
+    }     
 
     // debug
-    //exportToCSV(normalizedMap);
+    //exportToCSV(workingmap);
 
-    // convert the normalized and smoothed map to a cities skylines map
-    for (let y = 0; y < 1081; y++) {
-        for (let x = 0; x < 1081; x++) {
+    // convert the normalized and smoothed map to a cities skylines map, taking scale into account
+    for (let y = 0; y < citiesmapSize; y++) {
+        for (let x = 0; x < citiesmapSize; x++) {
             // get the value in 1/10meyers and scale and convert to cities skylines 16 bit int
-            let h = parseInt(normalizedMap[y][x] / 0.015625 * parseFloat(scope.heightScale) / 100);
+            let h = parseInt(workingmap[y][x] / 0.015625 * parseFloat(scope.heightScale) / 100);
 
             if (h > 65535) h = 65535;
 
             // calculate index in image
-            let index = y * 1081 * 2 + x * 2;
+            let index = y * citiesmapSize * 2 + x * 2;
 
             // cities used hi/low 16 bit
             citiesmap[index + 0] = h >> 8;
@@ -1208,12 +1246,12 @@ function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
 
     // draw a grid on the image
     if (document.getElementById('drawGrid').checked) {
-        for (let y = 0; y < 1081; y++) {
-            for (let x = 0; x < 1081; x++) {
+        for (let y = 0; y < citiesmapSize; y++) {
+            for (let x = 0; x < citiesmapSize; x++) {
 
                 if (y % 120 == 0 || x % 120 == 0) {
                     // calculate index in image
-                    let index = y * 1081 * 2 + x * 2;
+                    let index = y * citiesmapSize * 2 + x * 2;
 
                     // create pixel
                     citiesmap[index + 0] = 127;
