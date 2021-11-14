@@ -1178,9 +1178,9 @@ function toCitiesmap(heightmap, watermap) {
             // raise the land by the amount of water depth
             // a height lower than baselevel is considered to be the below sea level and the height is set to 0
             // water depth is unaffected by height scale
-            // make sure the map has no heigher points as 1024 meters
+            // the map is unscaled at this point, so high mountains above 1024 meter can be present
             let calcHeight = (height + Math.round(scope.waterDepth * 10 * watermap[y][x])) / 10;
-            workingmap[y][x] = Math.min(1024, Math.max(0, calcHeight));                       
+            workingmap[y][x] = Math.max(0, calcHeight);                       
         }
     }
 
@@ -1229,7 +1229,7 @@ function toCitiesmap(heightmap, watermap) {
     for (let y = 0; y < citiesmapSize; y++) {
         for (let x = 0; x < citiesmapSize; x++) {
             // get the value in 1/10meyers and scale and convert to cities skylines 16 bit int
-            let h = parseInt(workingmap[y][x] / 0.015625 * parseFloat(scope.heightScale) / 100);
+            let h = Math.round(workingmap[y][x] / 100 * parseFloat(scope.heightScale) / 0.015625);
 
             if (h > 65535) h = 65535;
 
