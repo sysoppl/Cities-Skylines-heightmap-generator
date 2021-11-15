@@ -1086,6 +1086,28 @@ function tiltMap(map, gravityCenter, waterDepth) {
     return tiltedMap;
 }
 
+function levelMap(map, min, max, curve) {
+    const maxY = map.length;
+    const maxX = map[0].length;
+    const elevationStep = Math.round((max - min) / curve.length);
+
+    console.log('levels =>', min, max);
+    console.log('elevationstep, curve points', elevationStep, curve.length);
+
+    const leveledMap = Create2DArray(maxY, 0);
+
+    for (let y = 0; y < maxY; y++) {
+        for (let x = 0; x < maxX; x++) {
+            let h = map[y][x];
+            //let idx = Math.min(curve.length -1, Math.floor(h / elevationStep));
+            //let correction = curve[idx]; 
+            leveledMap[y][x] = h;
+        }
+    }
+
+    return leveledMap;
+}
+
 function toHeightmap(tiles, distance) {
     let tileNum = tiles.length;
     let srcMap = Create2DArray(tileNum * 512, 0);
@@ -1167,9 +1189,13 @@ function toCitiesmap(heightmap, watermap) {
     // cities has L/H byte order
     let citiesmap = new Uint8ClampedArray(2 * citiesmapSize * citiesmapSize);
     let workingmap = Create2DArray(citiesmapSize, 0); 
+
+    // correct the waterDepth for the scaling. 
+    // in the final pass, it will be scaled back. Round to 1 decimal
+    let waterDepth = Math.round(scope.waterDepth /  parseFloat(scope.heightScale) * 100 * 10) / 10;
     
     // watermap: => normalized depth between 0 => deepest water, 1 => land
-
+    
     for (let y = 0; y < citiesmapSize; y++) {
         for (let x = 0; x < citiesmapSize; x++) {
             // stay with ints as long as possible
@@ -1179,22 +1205,28 @@ function toCitiesmap(heightmap, watermap) {
             // a height lower than baselevel is considered to be the below sea level and the height is set to 0
             // water depth is unaffected by height scale
             // the map is unscaled at this point, so high mountains above 1024 meter can be present
-            let calcHeight = (height + Math.round(scope.waterDepth * 10 * watermap[y][x])) / 10;
+            let calcHeight = (height + Math.round(waterDepth * 10 * watermap[y][x])) / 10;
             workingmap[y][x] = Math.max(0, calcHeight);                       
         }
     }
+
+    // level correction, for specific needs
+    // to smooth plains and dramatize mountains or level a mountanus coastline
+    // depending on the passed curve, the terrain is adjusted
+    let curve = [1, 1, 1, 1, 1];
+    workingmap = levelMap(workingmap, grid.minHeight + waterDepth, grid.maxHeight + waterDepth, curve);
 
     // smooth the plains and wateredges in a number of passes
     let passes = parseInt(document.getElementById('blurPasses').value);
     let postPasses = parseInt(document.getElementById('blurPostPasses').value);
     let plainsHeight = parseInt(document.getElementById('plainsHeight').value);
     for(let l=0; l<passes; l++) {
-        workingmap = filterMap(workingmap, 0, plainsHeight + scope.waterDepth, meanKernel);
+        workingmap = filterMap(workingmap, 0, plainsHeight + waterDepth, meanKernel);
     }
 
     // sharpen the mountains, for more dramatic effect
     for(let l=0; l<postPasses; l++) {
-        workingmap = filterMap(workingmap, plainsHeight + scope.waterDepth, grid.maxHeight, sharpenKernel);
+        workingmap = filterMap(workingmap, plainsHeight + waterDepth, grid.maxHeight, sharpenKernel);
     } 
 
     // if there where enough passes, all the small streams on the plains are faded.
@@ -1204,16 +1236,22 @@ function toCitiesmap(heightmap, watermap) {
     if(document.getElementById('drawStrm').checked) {
             for (let y = 0; y < citiesmapSize; y++) {
             for (let x = 0; x < citiesmapSize; x++) {
-                if(workingmap[y][x] > highestWaterHeight) {
-                        highestWaterHeight = workingmap[y][x];
-                }                   
-                workingmap[y][x] -= (1 - watermap[y][x]) * streamDepth;                
+                let height = workingmap[y][x];
+                if(height > highestWaterHeight) {
+                        highestWaterHeight = height;
+                } 
+                // prevent drawing below the seabed
+                if (height > streamDepth) {
+                    workingmap[y][x] = height - (1 - watermap[y][x]) * streamDepth;                
+                }
             }
         }
     }
 
     // tilt the map in the direction of gravity, so water always flows to the lowest point
     let tiltHeight = parseInt(document.getElementById('tiltHeight').value);
+    // correct the tiltHeight for the scale. In the final pass, it will be corrected back
+    tiltHeight = Math.round(tiltHeight /  parseFloat(scope.heightScale) * 100 * 10) / 10;
     workingmap = tiltMap(workingmap, scope.gravityCenter, tiltHeight);
 
     // finally, finish the drawn streams with a light smoothing
@@ -1225,7 +1263,8 @@ function toCitiesmap(heightmap, watermap) {
     // debug
     //exportToCSV(workingmap);
 
-    // convert the normalized and smoothed map to a cities skylines map, taking scale into account
+    // convert the normalized and smoothed map to a cities skylines map/
+    // As this is the final step, take scale into account
     for (let y = 0; y < citiesmapSize; y++) {
         for (let x = 0; x < citiesmapSize; x++) {
             // get the value in 1/10meyers and scale and convert to cities skylines 16 bit int
