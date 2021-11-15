@@ -1031,7 +1031,7 @@ function tiltMap(map, gravityCenter, waterDepth) {
             gravityPoint.x = parseInt(maxX / 2);
             gravityPoint.y = parseInt(maxY / 2);
             break;
-        case 2: // North
+        case 2: // North center
             gravityPoint.x = parseInt(maxX / 2);
             gravityPoint.y = 0;
             break;
@@ -1039,7 +1039,7 @@ function tiltMap(map, gravityCenter, waterDepth) {
             gravityPoint.x = maxX;
             gravityPoint.y = 0;
             break;
-        case 4: // East
+        case 4: // East center
             gravityPoint.x = maxX;
             gravityPoint.y = parseInt(maxY  / 2);
             break;
@@ -1047,7 +1047,7 @@ function tiltMap(map, gravityCenter, waterDepth) {
             gravityPoint.x = maxX;
             gravityPoint.y = maxY;
             break;
-        case 6: // South
+        case 6: // South center
             gravityPoint.x = parseInt(maxX / 2);
             gravityPoint.y = maxY;
             break;
@@ -1055,13 +1055,25 @@ function tiltMap(map, gravityCenter, waterDepth) {
             gravityPoint.x = 0;
             gravityPoint.y = maxY;
             break;
-        case 8: // West
+        case 8: // West center
             gravityPoint.x = 0;
             gravityPoint.y = parseInt(maxY / 2);
             break;
         case 9: // North - West
             gravityPoint.x = 0;
             gravityPoint.y = 0;
+            break;
+        case 10: // North side
+            gravityPoint.y = 0;
+            break;
+        case 11: // East side
+            gravityPoint.x = maxX;
+            break;
+        case 12: // South side
+            gravityPoint.y = maxY;
+            break;
+        case 13: // West side
+            gravityPoint.x = 0;
             break;
         default:
             // do nothing
@@ -1072,14 +1084,36 @@ function tiltMap(map, gravityCenter, waterDepth) {
             let h = map[y][x];
             let correction = 0; 
             
-            //calculate the distance to the gravity center
-            if('x' in gravityPoint) {
-                //pythagoras for distance
-                let relDistance = Math.sqrt(Math.pow(gravityPoint.x - x, 2) + Math.pow(gravityPoint.y - y, 2)) / maxY;
-                correction = Math.round(waterDepth * relDistance * 100) / 100;
+            //calculate the relative distance to the gravity center or side
+            let relDistance = 0;
+            switch(gravityCenter) {
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                    //pythagoras for distance
+                    relDistance = Math.sqrt(Math.pow(gravityPoint.x - x, 2) + Math.pow(gravityPoint.y - y, 2)) / maxY;
+                    break;
+                case 10:
+                case 12:
+                    // north and south side, only take y distance into account
+                    relDistance = Math.abs(gravityPoint.y - y) / maxY;
+                    break;
+                case 11:
+                case 13:
+                    // east and west side, only take x distance into account
+                    relDistance = Math.abs(gravityPoint.x - x) / maxX;
+                    break;
+                default:
+                    // do nothing
             }
 
-            tiltedMap[y][x] = h + correction;
+            tiltedMap[y][x] = h +  Math.round(waterDepth * relDistance * 100) / 100;;
         }
     }
 
