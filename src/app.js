@@ -615,21 +615,30 @@ function changeMapsize(el) {
 }
 
 function setBaseLevel() {
-    new Promise((resolve) => {
-        getHeightmap(2, resolve);
-    }).then(() => {
+    if(grid.minHeight === null) {
+       new Promise((resolve) => {
+            getHeightmap(2, resolve);
+        }).then(() => {
+            scope.baseLevel = grid.minHeight;            
+        });
+    }
+    else {
         scope.baseLevel = grid.minHeight;
-        saveSettings();
-    });
+    }
+    saveSettings();
 }
 
 function setHeightScale() {
-    new Promise((resolve) => {
-        getHeightmap(2, resolve);
-    }).then(() => {
+    if(grid.maxHeight === null) {
+        new Promise((resolve) => {
+            getHeightmap(2, resolve);
+        }).then(() => {
+            scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
+        });
+    } else {
         scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
-        saveSettings();
-    });
+    }
+    saveSettings();
 }
 
 function incPb(el, value = 1) {
@@ -1125,17 +1134,29 @@ function levelMap(map, min, max, curve) {
     const maxX = map[0].length;
     const elevationStep = Math.round((max - min) / curve.length);
 
+    // calculate the minimum level for each index in the curve
+    let levels = [min]; // size of the levels array will be 1 larger then the curve
+    let lastLevel = min;
+    for(let i = 0; i < curve.length; i++) {
+        levels.push(Math.round((lastLevel + elevationStep * curve[i]) * 10) / 10);
+        lastLevel = levels[i + 1];
+    }
+
     console.log('levels =>', min, max);
     console.log('elevationstep, curve points', elevationStep, curve.length);
+    console.log(levels);
 
     const leveledMap = Create2DArray(maxY, 0);
 
     for (let y = 0; y < maxY; y++) {
         for (let x = 0; x < maxX; x++) {
             let h = map[y][x];
-            //let idx = Math.min(curve.length -1, Math.floor(h / elevationStep));
-            //let correction = curve[idx]; 
-            leveledMap[y][x] = h;
+
+            if(h - min > 0) {
+                let idx = Math.min(curve.length -1, Math.floor((h - min) / elevationStep));
+                h = levels[idx] + ((h - levels[idx]) * curve[idx]);
+            }
+           leveledMap[y][x] = h;
         }
     }
 
@@ -1247,8 +1268,8 @@ function toCitiesmap(heightmap, watermap) {
     // level correction, for specific needs
     // to smooth plains and dramatize mountains or level a mountanus coastline
     // depending on the passed curve, the terrain is adjusted
-    let curve = [1, 1, 1, 1, 1];
-    workingmap = levelMap(workingmap, grid.minHeight + waterDepth, grid.maxHeight + waterDepth, curve);
+    let curve = [0.2, 0.2, 0.4, 0.6, 0.8, 1, 1, 1, 1.1, 1.2, 1.3, 1.4, 1.5];
+    //workingmap = levelMap(workingmap, grid.minHeight + waterDepth, grid.maxHeight + waterDepth, curve);
 
     // smooth the plains and wateredges in a number of passes
     let passes = parseInt(document.getElementById('blurPasses').value);
