@@ -101,6 +101,7 @@ map.on('idle', function () {
     // scope can be set if bindings.js is loaded (because of docReady) 
     scope.waterDepth = parseInt(grid.waterDepth) || 50;
     scope.gravityCenter = parseInt(grid.gravityCenter) || 0;
+    scope.levelCorrection = parseInt(grid.levelCorrection) || 0;
 
     saveSettings();
 });
@@ -451,6 +452,8 @@ function saveSettings() {
     grid.gravityCenter = scope.gravityCenter;
     grid.tiltHeight = parseInt(document.getElementById('tiltHeight').value);
 
+    grid.levelCorrection = scope.levelCorrection;
+
     localStorage.setItem('grid', JSON.stringify(grid));
 }
 
@@ -462,14 +465,29 @@ function Create2DArray(rows, def = null) {
     return arr;
 }
 
-// for debugging maps
+// for debugging maps (2 dimensinal array), and 1 dimensional arrays
 // use a format that is understood by excel (comma delimeted)
 // and locale of the browser (and thus excel i presume)
 function exportToCSV(mapData) {
     let csvRows = [];
+    function isNumber(n) { return !isNaN(parseFloat(n)) && !isNaN(n - 0) }
 
-    for(var i=0, l=mapData.length; i<l; ++i){
-        csvRows.push(mapData[i].map(x => x.toLocaleString(undefined)).join('\t')); 
+    for(var i=0, l=mapData.length; i<l; ++i) {
+        let val = mapData[i];
+        // test for array dimension
+        if(Array.isArray(val)) {
+            if(isNumber(val[0])) {
+                csvRows.push(val.map(x => x.toLocaleString(undefined)).join('\t')); 
+            } else {
+                csvRows.push(val.join('\t'));
+            }
+        } else { // 1 dimensional array
+            if(isNumber(val)) {
+                csvRows.push(val.toLocaleString(undefined));
+            } else {
+                csvRows.push(val);
+            }           
+        }
     }
 
     let csvString = csvRows.join('\r\n');
@@ -1126,40 +1144,114 @@ function tiltMap(map, gravityCenter, waterDepth) {
         }
     }
 
+    if(gravityCenter == 0) {
+        console.log('no map tilting');
+    } else{
+        console.log(`tilted map in direction ${gravityCenter} with ${waterDepth} m`);
+    }
     return tiltedMap;
 }
 
-function levelMap(map, min, max, curve) {
+function interpolateArray(data, fitCount) {
+
+    var linearInterpolate = function (before, after, atPoint) {
+        return before + (after - before) * atPoint;
+    };
+
+    var newData = new Array();
+    var springFactor = new Number((data.length - 1) / (fitCount - 1));
+    newData[0] = data[0]; // for new allocation
+    for ( var i = 1; i < fitCount - 1; i++) {
+        var tmp = i * springFactor;
+        var before = new Number(Math.floor(tmp)).toFixed();
+        var after = new Number(Math.ceil(tmp)).toFixed();
+        var atPoint = tmp - before;
+        newData[i] = linearInterpolate(data[before], data[after], atPoint);
+    }
+    newData[fitCount - 1] = data[data.length - 1]; // for new allocation
+    return newData;
+}
+
+function levelMap(map, min, max, style) {
+    let curve;
+
+
+    switch(style) {
+        case 1: // reserved for testing
+            curve = [0.1, 1, 1.9];            
+            break;
+        case 2: // coastline and plains
+            curve = [0.15, 0.45, 0.75, 1.1, 1.4, 1.7, 1.9, 1.9];
+            break;
+        case 3: // agressive coastline and plains
+            curve = [0.1, 0.2, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6];
+            break;
+        case 9:
+            curve = [0.1, 0.2, 0.5, 1, 1.3, 1.7, 2.5];
+            break;
+        default:
+            console.log('no map leveling');
+            return map;
+    }
+
+    const interpolatedCurve = interpolateArray(curve, 256);
+
     const maxY = map.length;
     const maxX = map[0].length;
-    const elevationStep = Math.round((max - min) / curve.length);
+    const elevationStep = Math.round((max - min) / interpolatedCurve.length);
 
     // calculate the minimum level for each index in the curve
     let levels = [min]; // size of the levels array will be 1 larger then the curve
     let lastLevel = min;
-    for(let i = 0; i < curve.length; i++) {
-        levels.push(Math.round((lastLevel + elevationStep * curve[i]) * 10) / 10);
+    for(let i = 0; i < interpolatedCurve.length; i++) {
+        levels.push(Math.round((lastLevel + elevationStep * interpolatedCurve[i]) * 10) / 10);
         lastLevel = levels[i + 1];
     }
 
-    console.log('levels =>', min, max);
-    console.log('elevationstep, curve points', elevationStep, curve.length);
-    console.log(levels);
+    // debugging
+    //let debug = [];
+    //for(let i = 0; i < interpolatedCurve.length; i++) {
+    //    debug.push([i, interpolatedCurve[i], levels[i]]);
+    //}
+    //exportToCSV(debug);
 
     const leveledMap = Create2DArray(maxY, 0);
+
+    let highestHight = 0;
 
     for (let y = 0; y < maxY; y++) {
         for (let x = 0; x < maxX; x++) {
             let h = map[y][x];
 
             if(h - min > 0) {
-                let idx = Math.min(curve.length -1, Math.floor((h - min) / elevationStep));
-                h = levels[idx] + ((h - levels[idx]) * curve[idx]);
+                // calcualte the index based on the position in the heights array
+                let idx = Math.min(interpolatedCurve.length - 1, Math.floor((h - min) / elevationStep));
+                h = levels[idx] + ((h - levels[idx]) * interpolatedCurve[idx]);
+                h = Math.round(h * 10) / 10;
             }
            leveledMap[y][x] = h;
+
+           if(h > highestHight) highestHight = h;
         }
     }
 
+    console.log(`min ${min} max ${max} highest high ${highestHight}`);
+    // after releveling the map, it is possible that the highest point has become higher
+    // rescale back to original min max
+    let rescale = 10;
+    if (highestHight > max) {
+        rescale = Math.floor((max - min) / highestHight * 100) / 10; // little speed gain, by taking calc out the loop
+        for (let y = 0; y < maxY; y++) {
+            for (let x = 0; x < maxX; x++) {
+                let h = leveledMap[y][x];
+                if(h - min > 0) {
+                    leveledMap[y][x] = Math.round(h * rescale) / 10;
+                }
+            }
+        }
+    }
+
+    console.log(`leveled map with style ${style}, rescale ${rescale/10}`);
     return leveledMap;
 }
 
@@ -1267,9 +1359,7 @@ function toCitiesmap(heightmap, watermap) {
 
     // level correction, for specific needs
     // to smooth plains and dramatize mountains or level a mountanus coastline
-    // depending on the passed curve, the terrain is adjusted
-    let curve = [0.2, 0.2, 0.4, 0.6, 0.8, 1, 1, 1, 1.1, 1.2, 1.3, 1.4, 1.5];
-    //workingmap = levelMap(workingmap, grid.minHeight + waterDepth, grid.maxHeight + waterDepth, curve);
+    workingmap = levelMap(workingmap, grid.minHeight + waterDepth, grid.maxHeight, scope.levelCorrection);
 
     // smooth the plains and wateredges in a number of passes
     let passes = parseInt(document.getElementById('blurPasses').value);

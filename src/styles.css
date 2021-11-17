@@ -664,6 +664,10 @@ dd.wsSlp {
     width: 5em;
 }
 
+.wideSelect select {
+    width: 12.5em;
+}
+
 @-moz-document url-prefix() {
     .wsSlp select {
         padding-right: 0.875em;

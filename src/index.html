@@ -112,20 +112,20 @@
                         <dt>Center of gravity:</dt>
                         <dd class="wsSlp">
                             <select data-model="gravityCenter">
-                                <option id="ov1" value="0">None</option>
-                                <option id="ov2" value="1">Center</option>
-                                <option id="ov3" value="2">North center</option>
-                                <option id="ov3" value="10">North side</option>
-                                <option id="ov3" value="3">North-East</option>
-                                <option id="ov4" value="4">East center</option>
-                                <option id="ov4" value="11">East side</option>
-                                <option id="ov3" value="5">South-East</option>
-                                <option id="ov4" value="6">South center</option>
-                                <option id="ov4" value="12">South side</option>
-                                <option id="ov3" value="7">South-West</option>
-                                <option id="ov4" value="8">West center</option>
-                                <option id="ov4" value="13">West side</option>
-                                <option id="ov3" value="9">North-West</option>
+                                <option value="0">None</option>
+                                <option value="1">Center</option>
+                                <option value="2">North center</option>
+                                <option value="10">North side</option>
+                                <option value="3">North-East</option>
+                                <option value="4">East center</option>
+                                <option value="11">East side</option>
+                                <option value="5">South-East</option>
+                                <option value="6">South center</option>
+                                <option value="12">South side</option>
+                                <option value="7">South-West</option>
+                                <option value="8">West center</option>
+                                <option value="13">West side</option>
+                                <option value="9">North-West</option>
                             </select><i class="fas fa-chevron-down"></i>
                         </dd>
                         <dd>@&nbsp;&nbsp;</dd>
@@ -142,7 +142,7 @@
                         <dt class="withCb">Grid: </dt>
                         <dd><input type="checkbox" id="drawGrid"><i class="fas fa-check"></i></dd>
                     </dl>                   
-                    <header><h4>Smoothing</h4><hr></header>
+                    <header><h4>Smoothing &amp; leveling</h4><hr></header>
                     <div class="row">                    
                         <div>
                             <div class="vertinput">To (m)</div>                           
@@ -161,9 +161,24 @@
                             <div><dd><input type="number" min="0" max="10" step="1" id="streamDepth"></dd></div>
                         </div>                        
                     </div>
+                    <br>
+                    <div class="row">
+                        <dl>
+                            <dt>Level correction:</dt>
+                            <dd class="wsSlp wideSelect">
+                                <select data-model="levelCorrection">
+                                    <option value="0">None</option>
+                                    <option value="1">Testing</option>
+                                    <option value="2">Coastline &amp; plains</option>
+                                    <option value="3">Agressive coast &amp; plains</option>
+                                    <option value="9">Plains &amp; dramatic mountains</option>
+                                </select><i class="fas fa-chevron-down"></i>
+                            </dd>
+                            <dd>&nbsp;</dd>
+                        </dl>
+                    </div>
                 </div>
             </div>
-            <br>
             <hr>
             <div class="footer">
                 <progress id="progress" value="0" max="500"></progress>
