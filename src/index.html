@@ -5,8 +5,8 @@
     <meta charset='utf-8' />
     <title>Cities: Skylines map generator</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/destyle.css@1.0.15/destyle.css"/>
 
@@ -78,7 +78,6 @@
                         <div><dt>Max. height:</dt><dd class="unit" id="maxh"></dd><dd><abbr>m</abbr></dd></div>
                     </dl>
                 </div>
-                <h3>Settings:</h3>
                 <div class="settings">
                     <header><h4>Size and scale</h4><hr></header>
                     <dl>
@@ -95,8 +94,8 @@
                             <dd><button class="calc" onclick="setBaseLevel()"
                                 title="Set to the same value as Min. height"><i class="fas fa-calculator"></i></button></dd>
                         <dt>Height scale:</dt>
-                            <dd><input type="range" data-model="heightScale" min="0" max="250" step="0.1" id="heightScale"></dd>
-                            <dd><input type="number" data-model="heightScale" step="0.1"></dd>
+                            <dd><input type="range" data-model="heightScale" min="0" max="250" step="1" id="heightScale"></dd>
+                            <dd><input type="number" data-model="heightScale" step="1"></dd>
                             <dd><abbr>%</abbr></dd>
                             <dd><button class="calc" onclick="setHeightScale()"
                                 title="Set to the maximum scale possible with the current settings"><i class="fas fa-calculator"></i></button></dd>
@@ -107,31 +106,77 @@
                     <header><h4>Water area</h4><hr></header>
                     <dl>
                         <dt>Water depth:</dt>
-                            <dd><input type="range" data-model="waterDepth" min="0" max="40" step="0.1" id="waterDepth"></dd>
-                            <dd><input type="number" data-model="waterDepth" min="0" max="40" step="0.1"></dd>
-                            <dd><abbr>m</abbr></dd>
-                        <dt>Waterside slope:</dt>
-                            <dd><input type="range" data-model="wsSlope" min="1" max="4" step="1" id="wsSlope"></dd>
-                            <dd class="wsSlp">
-                                <select data-model="wsSlope">
-                                    <option id="ov1" value="1">16</option>
-                                    <option id="ov2" value="2">32</option>
-                                    <option id="ov3" value="3">48</option>
-                                    <option id="ov4" value="4">64</option>
-                                </select><i class="fas fa-chevron-down"></i></dd>
-                            <dd><abbr>m</abbr></dd>
-                        <dt class="withCb">Blur waterside:</dt>
-                            <dd><input type="checkbox" id="blurWs"><i class="fas fa-check"></i></dd>
-                        <dt class="withCb">Draw streams:</dt>
+                            <dd><input type="range" data-model="waterDepth" min="0" max="60" step="1" id="waterDepth"></dd>
+                            <dd><input type="number" data-model="waterDepth" min="0" max="60" step="1"></dd>
+                            <dd><abbr>m</abbr></dd>                                                
+                        <dt>Center of gravity:</dt>
+                        <dd class="wsSlp">
+                            <select data-model="gravityCenter">
+                                <option value="0">None</option>
+                                <option value="1">Center</option>
+                                <option value="2">North center</option>
+                                <option value="10">North side</option>
+                                <option value="3">North-East</option>
+                                <option value="4">East center</option>
+                                <option value="11">East side</option>
+                                <option value="5">South-East</option>
+                                <option value="6">South center</option>
+                                <option value="12">South side</option>
+                                <option value="7">South-West</option>
+                                <option value="8">West center</option>
+                                <option value="13">West side</option>
+                                <option value="9">North-West</option>
+                            </select><i class="fas fa-chevron-down"></i>
+                        </dd>
+                        <dd>@&nbsp;&nbsp;</dd>
+                        <dd><input type="number" min="0" max="250" step="1" id="tiltHeight"></dd>
+                        <dd><abbr>m</abbr></dd>
+                        <dt class="withCb">Streams:</dt>
                             <dd><input type="checkbox" id="drawStrm"><i class="fas fa-check"></i></dd>
                     </dl>
-                    <header><h4>Options</h4><hr></header>
+                    <header><h4>Draw options</h4><hr></header>
                     <dl>
-                        <dt class="withCb">Draw marker:</dt>
-                            <dd><input type="checkbox" id="drawMarker"><i class="fas fa-check"></i></dd>
-                        <dt class="withCb">Draw grid:</dt>
-                            <dd><input type="checkbox" id="drawGrid"><i class="fas fa-check"></i></dd>
-                    </dl>
+                        <dt class="withCb">Marker: </dt>
+                        <dd><input type="checkbox" id="drawMarker"><i class="fas fa-check"></i></dd>
+                        <dt></dt>
+                        <dt class="withCb">Grid: </dt>
+                        <dd><input type="checkbox" id="drawGrid"><i class="fas fa-check"></i></dd>
+                    </dl>                   
+                    <header><h4>Smoothing &amp; leveling</h4><hr></header>
+                    <div class="row">                    
+                        <div>
+                            <div class="vertinput">To (m)</div>                           
+                            <div><dd><input type="number" min="0" max="250" step="10" id="plainsHeight"></dd></div>
+                        </div>
+                        <div>
+                            <div class="vertinput">Passes</div>                           
+                            <div><dd><input type="number" min="0" max="25" step="1" id="blurPasses"></dd></div>
+                        </div>
+                        <div>
+                            <div class="vertinput">Post pas.</div>                           
+                            <div><dd><input type="number" min="0" max="10" step="1" id="blurPostPasses"></dd></div>
+                        </div>                        
+                        <div>
+                            <div class="vertinput">Stream depth</div>                           
+                            <div><dd><input type="number" min="0" max="10" step="1" id="streamDepth"></dd></div>
+                        </div>                        
+                    </div>
+                    <br>
+                    <div class="row">
+                        <dl>
+                            <dt>Level correction:</dt>
+                            <dd class="wsSlp wideSelect">
+                                <select data-model="levelCorrection">
+                                    <option value="0">None</option>
+                                    <option value="1">Testing</option>
+                                    <option value="2">Coastline &amp; plains</option>
+                                    <option value="3">Agressive coast &amp; plains</option>
+                                    <option value="9">Plains &amp; dramatic mountains</option>
+                                </select><i class="fas fa-chevron-down"></i>
+                            </dd>
+                            <dd>&nbsp;</dd>
+                        </dl>
+                    </div>
                 </div>
             </div>
             <hr>
@@ -175,7 +220,7 @@
     <script src="pako.min.js"></script>
     <script src="upng.js"></script>
     <script src='tiles.js'></script>
-    <script src="binding.js"></script>
+    <script src="binding.js"></script> <!-- needs to be loaded before app, for scope var-->
     <script src="app.js"></script>
 </body>
 

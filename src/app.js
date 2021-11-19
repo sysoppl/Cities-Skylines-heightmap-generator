@@ -2,6 +2,23 @@
 
 'use strict'
 
+const defaultWaterdepth = 40;
+
+// see: https://www.taylorpetrick.com/blog/post/convolution-part3
+const meanKernel = [ 
+    [1, 1, 1], 
+    [1, 1, 1], 
+    [1, 1, 1] 
+]; 
+
+const sharpenKernel = [ 
+    [-0.00391, -0.01563, -0.02344, -0.01563, -0.00391], 
+    [-0.01563, -0.06250, -0.09375, -0.06250, -0.01563],
+    [-0.02344, -0.09375, +1.85980, -0.09375, -0.02344], 
+    [-0.01563, -0.06250, -0.09375, -0.06250, -0.01563],
+    [-0.00391, -0.01563, -0.02344, -0.01563, -0.00391] 
+]; 
+
 var vmapSize = 18.144;
 var mapSize = 17.28;
 var tileSize = 1.92;
@@ -26,13 +43,8 @@ if (debug) while (debugElements.length > 0) {
     debugElements[0].classList.remove('debug');
 }
 
-// MapBox API token
-var dateTime = new Date();
-var day = dateTime.getDate();
-if(day == 1 || day == 2 || day == 3 || day == 4 || day == 5 || day == 6 || day == 7) mapboxgl.accessToken = 'MAPBOX API TOKEN HERE';
-if(day == 8 || day == 9 || day == 10 || day == 11 || day == 12 || day == 13 || day == 14) mapboxgl.accessToken = 'MAPBOX API TOKEN HERE';
-if(day == 15 || day == 16 || day == 17 || day == 18 || day == 19 || day == 20 || day == 21) mapboxgl.accessToken = 'MAPBOX API TOKEN HERE';
-if(day == 22 || day == 23 || day == 24 || day == 25 || day == 26 || day == 27 || day == 28 || day == 29 || day == 30 || day == 31) mapboxgl.accessToken = 'MAPBOX API TOKEN HERE';
+// MapBox API token, temperate email for dev
+mapboxgl.accessToken = 'pk.eyJ1IjoiYmVydGRldm4iLCJhIjoiY2t2dXF1ZGhyMHlteTJ2bzJjZzE3M24xOCJ9.J5skknTRyh-6RoDWD4kw2w';
 
 var map = new mapboxgl.Map({
     container: 'map',                               // Specify the container ID
@@ -59,8 +71,6 @@ map.on('load', function () {
     scope.mapSize = mapSize;
     scope.baseLevel = 0;
     scope.heightScale = 100;
-    scope.waterDepth = 5;
-    scope.wsSlope = 1;
 
     caches.open('tiles').then((data) => cache = data);
 });
@@ -88,6 +98,11 @@ map.on('click', function (e) {
 });
 
 map.on('idle', function () {
+    // scope can be set if bindings.js is loaded (because of docReady) 
+    scope.waterDepth = parseInt(grid.waterDepth) || 50;
+    scope.gravityCenter = parseInt(grid.gravityCenter) || 0;
+    scope.levelCorrection = parseInt(grid.levelCorrection) || 0;
+
     saveSettings();
 });
 
@@ -391,19 +406,54 @@ function getGrid(lng, lat, size) {
 }
 
 function loadSettings() {
-    let grid = JSON.parse(localStorage.getItem('grid')) || {};
-    grid.lng = parseFloat(grid.lng) || -122.43877;
-    grid.lat = parseFloat(grid.lat) || 37.75152;
-    grid.zoom = parseFloat(grid.zoom) || 11.0;
-    grid.minHeight = parseFloat(grid.minHeight) || 0;
-    grid.maxHeight = parseFloat(grid.maxHeight) || 0;
-    grid.heightContours = grid.heightContours || false;
-    grid.waterContours = grid.waterContours || false;
-    return grid;
+    let stored = JSON.parse(localStorage.getItem('grid')) || {};
+    
+    // San Francisco
+    stored.lng = parseFloat(stored.lng) || -122.43877;
+    stored.lat = parseFloat(stored.lat) || 37.75152;
+    
+    stored.zoom = parseFloat(stored.zoom) || 11.0;
+    
+    stored.minHeight = parseFloat(stored.minHeight) || 0;
+    stored.maxHeight = parseFloat(stored.maxHeight) || 0;
+    
+    stored.heightContours = stored.heightContours || false;
+    stored.waterContours = stored.waterContours || false;
+
+    // TODO: do not set global vars!
+    document.getElementById('waterDepth').value = parseInt(stored.waterDepth) || defaultWaterdepth;
+    document.getElementById('tiltHeight').value = parseInt(stored.tiltHeight) || parseInt(stored.waterDepth / 2);
+
+    document.getElementById('drawGrid').checked = stored.drawGrid || false;
+    document.getElementById('drawStrm').checked = stored.drawStreams || false;
+    document.getElementById('drawMarker').checked = stored.drawMarker || false;
+
+    document.getElementById('blurPasses').value = parseInt(stored.blurPasses) || 7;
+    document.getElementById('blurPostPasses').value = parseInt(stored.blurPostPasses) || 3;
+    document.getElementById('plainsHeight').value = parseInt(stored.plainsHeight) || 140;
+    document.getElementById('streamDepth').value = parseInt(stored.streamDepth) || 140;
+
+    return stored;
 }
 
 function saveSettings() {
     grid.zoom = map.getZoom();
+
+    grid.drawGrid = document.getElementById('drawGrid').checked;
+    grid.waterDepth = parseInt(document.getElementById('waterDepth').value);
+    grid.drawStreams = document.getElementById('drawStrm').checked;
+    grid.drawMarker = document.getElementById('drawMarker').checked;
+    
+    grid.plainsHeight = parseInt(document.getElementById('plainsHeight').value);
+    grid.blurPasses = parseInt(document.getElementById('blurPasses').value);
+    grid.blurPostPasses = parseInt(document.getElementById('blurPostPasses').value);
+    grid.streamDepth = parseInt(document.getElementById('streamDepth').value);
+
+    grid.gravityCenter = scope.gravityCenter;
+    grid.tiltHeight = parseInt(document.getElementById('tiltHeight').value);
+
+    grid.levelCorrection = scope.levelCorrection;
+
     localStorage.setItem('grid', JSON.stringify(grid));
 }
 
@@ -413,6 +463,43 @@ function Create2DArray(rows, def = null) {
         arr[i] = new Array(rows).fill(def);
     }
     return arr;
+}
+
+// for debugging maps (2 dimensinal array), and 1 dimensional arrays
+// use a format that is understood by excel (comma delimeted)
+// and locale of the browser (and thus excel i presume)
+function exportToCSV(mapData) {
+    let csvRows = [];
+    function isNumber(n) { return !isNaN(parseFloat(n)) && !isNaN(n - 0) }
+
+    for(var i=0, l=mapData.length; i<l; ++i) {
+        let val = mapData[i];
+        // test for array dimension
+        if(Array.isArray(val)) {
+            if(isNumber(val[0])) {
+                csvRows.push(val.map(x => x.toLocaleString(undefined)).join('\t')); 
+            } else {
+                csvRows.push(val.join('\t'));
+            }
+        } else { // 1 dimensional array
+            if(isNumber(val)) {
+                csvRows.push(val.toLocaleString(undefined));
+            } else {
+                csvRows.push(val);
+            }           
+        }
+    }
+
+    let csvString = csvRows.join('\r\n');
+    let a = document.createElement('a');
+
+    a.href        = 'data:attachment/csv,' +  encodeURIComponent(csvString);
+    a.target      = '_blank';
+    a.download    = 'myFile.csv';
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
 
 function togglePanel(index) {
@@ -452,37 +539,73 @@ function togglePanel(index) {
     }
 }
 
-function calcMinMaxHeight(heightmap, xOffset, yOffset) {
-    let minHeight = 100000;
-    let maxHeight = -100000;
+function sanatizeMap(map, xOffset, yOffset) {
+    const citiesmapSize = 1081;
+    let sanatizedMap = Create2DArray(citiesmapSize, 0);
 
-    // iterate over the heightmap
-    for (let y = yOffset; y < yOffset + 1081; y++) {
-        for (let x = xOffset; x < yOffset + 1081; x++) {
-            let h = heightmap[y][x];
-            if (h > maxHeight) maxHeight = h;
-            if (h < minHeight) minHeight = h;
+    let lowestPositve = 100000;
+
+    // pass 1: normalize the map, and determine the lowestPositve
+    for (let y = yOffset; y < yOffset + citiesmapSize; y++) {
+        for (let x = xOffset; x < xOffset + citiesmapSize; x++) {
+            let h = map[y][x]; 
+            if(h >= 0 && h < lowestPositve) {
+                lowestPositve = h;
+            }                  
+            sanatizedMap[y - yOffset][x - xOffset] = h;
         }
     }
-    grid.minHeight = minHeight / 10;
-    grid.maxHeight = maxHeight / 10;
+
+    // pass 2: fix negative heights artifact in mapbox maps
+    for (let y = 0; y < citiesmapSize; y++) {
+        for (let x = 0; x < citiesmapSize; x++) {
+            let h = sanatizedMap[y][x];
+            if(h < 0) {
+                sanatizedMap[y][x] = lowestPositve;                
+            }
+        }
+    }
+
+    return sanatizedMap;
+}
+
+function sanatizeWatermap(map, xOffset, yOffset) {
+    const citiesmapSize = 1081;
+    let watermap = Create2DArray(citiesmapSize, 0);
+
+    for (let y = yOffset; y < yOffset + citiesmapSize; y++) {
+        for (let x = xOffset; x < yOffset + citiesmapSize; x++) {
+            let h = map[y][x];
+            watermap[y - yOffset][x - xOffset] = h;
+        }
+    }
+
+    return watermap;
+}
+
+function calcMinMaxHeight(map) {
+    const maxY = map.length; 
+    const maxX = map[0].length;
+
+    const heights = {min: 100000, max: -100000}
+
+    for (let y = 0; y < maxY; y++) {
+        for (let x = 0; x < maxX; x++) {            
+            let h = map[y][x];
+            if (h > heights.max) heights.max = h;
+            if (h < heights.min) heights.min = h;            
+        }
+    }
+
+    heights.min = heights.min / 10;
+    heights.max = heights.max / 10;
+    
+    return heights;
 }
 
 function updateInfopanel() {
     let rhs = 17.28 / mapSize * 100;
-    /*
-    let cell = mapSize * 1000 / 1080;
-
-    let c1 = cell;
-    let c2 = cell * 2;
-    let c3 = cell * 3;
-    let c4 = cell * 4;
-
-    document.getElementById('ov1').innerHTML = c1.toFixed(1);
-    document.getElementById('ov2').innerHTML = c2.toFixed(1);
-    document.getElementById('ov3').innerHTML = c3.toFixed(1);
-    document.getElementById('ov4').innerHTML = c4.toFixed(1);
-    */
+     
     document.getElementById('rHeightscale').innerHTML = rhs.toFixed(1);
     document.getElementById('lng').innerHTML = grid.lng.toFixed(5);
     document.getElementById('lat').innerHTML = grid.lat.toFixed(5);
@@ -510,19 +633,30 @@ function changeMapsize(el) {
 }
 
 function setBaseLevel() {
-    new Promise((resolve) => {
-        getHeightmap(2, resolve);
-    }).then(() => {
+    if(grid.minHeight === null) {
+       new Promise((resolve) => {
+            getHeightmap(2, resolve);
+        }).then(() => {
+            scope.baseLevel = grid.minHeight;            
+        });
+    }
+    else {
         scope.baseLevel = grid.minHeight;
-    });
+    }
+    saveSettings();
 }
 
 function setHeightScale() {
-    new Promise((resolve) => {
-        getHeightmap(2, resolve);
-    }).then(() => {
+    if(grid.maxHeight === null) {
+        new Promise((resolve) => {
+            getHeightmap(2, resolve);
+        }).then(() => {
+            scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
+        });
+    } else {
         scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
-    });
+    }
+    saveSettings();
 }
 
 function incPb(el, value = 1) {
@@ -642,21 +776,29 @@ function getHeightmap(mode = 0, callback) {
             let xOffset = Math.round(leftDistance / distance * heightmap.length);
             let yOffset = Math.round(topDistance / distance * heightmap.length);
 
-            calcMinMaxHeight(heightmap, xOffset, yOffset);
+            let sanatizedMap = sanatizeMap(heightmap, xOffset, yOffset);
+
+            let heights = calcMinMaxHeight(sanatizedMap); 
+            grid.minHeight = heights.min;
+            grid.maxHeight = heights.max;
 
             pbElement.value = 500;
             // callback after height calculation is completed
             if (typeof callback === 'function') callback();
 
-            let watermap = toWatermap(vTiles, heightmap.length);
+            let watermap = sanatizeWatermap(toWatermap(vTiles, heightmap.length), xOffset, yOffset);
 
             switch (mode) {
                 case 0:
-                    citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
+                    // never draw a grid on a raw heightmap
+                    let savedDrawGrid = document.getElementById('drawGrid').checked;
+                    document.getElementById('drawGrid').checked = false;
+                    citiesmap = toCitiesmap(sanatizedMap, watermap);
                     download('heightmap.raw', citiesmap);
+                    document.getElementById('drawGrid').checked = savedDrawGrid;
                     break;
                 case 1:
-                    citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
+                    citiesmap = toCitiesmap(sanatizedMap, watermap);
                     png = UPNG.encodeLL([citiesmap], 1081, 1081, 1, 0, 16);
                     download('heightmap.png', png);
                     break;
@@ -664,7 +806,7 @@ function getHeightmap(mode = 0, callback) {
                     updateInfopanel();
                     break;
                 case 3:
-                    citiesmap = toCitiesmap(heightmap, watermap, xOffset, yOffset);
+                    citiesmap = toCitiesmap(sanatizedMap, watermap);
                     png = UPNG.encodeLL([citiesmap], 1081, 1081, 1, 0, 16);
                     downloadAsZip(png, 1);
                     break;
@@ -680,7 +822,7 @@ function getHeightmap(mode = 0, callback) {
         }
 
         // timeout!
-        if (ticks >= 1000) {
+        if (ticks >= 4096) {
             clearInterval(timer);
             console.error('timeout!');
             pbElement.value = 0;
@@ -753,8 +895,7 @@ async function getMapImage() {
 
 function autoSettings(withMap = true) {
     scope.mapSize = 17.28;
-    scope.waterDepth = 5.0;
-    scope.wsSlope = 1;
+    scope.waterDepth = defaultWaterdepth;
 
     mapSize = scope.mapSize / 1;
     vmapSize = mapSize * 1.05;
@@ -765,16 +906,21 @@ function autoSettings(withMap = true) {
             getHeightmap(2, resolve);
         }).then(() => {
             scope.baseLevel = grid.minHeight;
-            scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));
+            scope.heightScale = Math.min(250, Math.floor((1024 - scope.waterDepth) / (grid.maxHeight - scope.baseLevel) * 100));            
         });
     }
 
     setGrid(grid.lng, grid.lat, vmapSize);
 
-    document.getElementById('blurWs').checked = false;
-    document.getElementById('drawStrm').checked = false;
-    document.getElementById('drawMarker').checked = false;
-    document.getElementById('drawGrid').checked = false;
+    document.getElementById('drawStrm').checked = true;
+
+    document.getElementById('drawMarker').checked = true;
+    document.getElementById('drawGrid').checked = true;
+
+    document.getElementById('plainsHeight').value = 140;
+    document.getElementById('blurPasses').value = 10;
+    document.getElementById('blurPostPasses').value = 2;
+    document.getElementById('streamDepth').value = 7;
 }
 
 function isDownloadComplete(tiles, vTiles) {
@@ -863,161 +1009,250 @@ function toWatermap(vTiles, length) {
     return watermap;
 }
 
-function setWatersideSlope(watermap, distance) {
-    // change horizontal distance of waterside slope
-    // 1 <= distance <= 4
-    let wm;
-    let len = watermap.length;
-    let src = Array.from(watermap);
+// map filtering, for example smoothing the pixels in the plains, but leaving mountains and sea untouched
+// or enhance mountain edges
+// pas a kernel for filtering
+// see: https://en.wikipedia.org/wiki/Kernel_(image_processing) 
 
-    let offset = distance - 1;
+function filterMap(map, fromLevel, toLevel, kernel) {
+    const maxY = map.length;
+    const maxX = map[0].length;
 
-    // kernel
-    let k = [];
-    let diagK = [];
-    let kLen, dkLen;
+    // kernel size must be uneven!
+    const kernelDist = parseInt((kernel.length - 1) / 2);
+    
+    const filteredMap = Create2DArray(maxY, 0);
 
-    // base filter
-    /*
-    let f = [[0.33],
-            [0.5],                      // dist = 2
-            [0.66, 0.33],               // dist = 3
-            [0.75, 0.5, 0.25]];         // dist = 4
-    */
-    let f = [[0.111],
-            [0.250],                    // dist = 2
-            [0.444, 0.111],             // dist = 3
-            [0.563, 0.250, 0.063]];     // dist = 4
-
-    if (distance < 2) {
-        return src;
-    } else {
-        wm = Create2DArray(len, 0);
-
-        // generate kernel
-        k.push(f[offset]);
-        diagK.push(f[offset - 1]);
-        kLen = k[0].length;
-        dkLen = diagK[0].length;
-
-        // border padding
-        for (let i = 0; i < offset; i++) {
-            src.unshift(watermap[0]);
-            src.push(watermap[len - 1]);
-        }
-        for (let i = offset; i < len + offset; i++) {
-            for (let j = 0; j < offset; j++) {
-                src[i].unshift(watermap[i - offset][0]);
-                src[i].push(watermap[i - offset][len - 1]);
+    for (let y = 0; y < maxY; y++) {
+        for (let x = 0; x < maxX; x++) {
+            let h = map[y][x];
+            if (h >= fromLevel && h < fromLevel + toLevel) {
+                let sum = 0;
+                let cnt = 0;
+                for(let i = -kernelDist; i <= kernelDist; i++) {
+                    for(let j = -kernelDist; j <= kernelDist; j++) {
+                        if (y+i >=0 && y+i < maxY && x+j >= 0 && x+j < maxX) {
+                            cnt += kernel[i+kernelDist][j+kernelDist];
+                            sum += map[y+i][x+j] * kernel[i+kernelDist][j+kernelDist];                            
+                        }
+                    }
+                }
+                if(cnt) h = sum / cnt;
             }
+            filteredMap[y][x] = h; 
         }
     }
-
-    let tmp = Create2DArray(src.length, 0);
-
-    for (let i = offset; i < len + offset; i++) {
-        for (let j = offset; j < len + offset; j++) {
-
-            /* check in the following order
-                5 1 6
-                2 * 3
-                7 4 8
-            */
-
-            if (src[i][j] > 0.5) {
-                // No.1
-                if (src[i - 1][j] < src[i][j]) {
-                    for (let m = 0; m < kLen; m++) {
-                        tmp[i - m - 1][j] = Math.max(k[0][m] * src[i][j], src[i - m - 1][j], tmp[i - m - 1][j]);
-                    }
-                }
-                // No.2
-                if (src[i][j - 1] < src[i][j]) {
-                    for (let m = 0; m < kLen; m++) {
-                        tmp[i][j - m - 1] = Math.max(k[0][m] * src[i][j], src[i][j - m - 1], tmp[i][j - m - 1]);
-                    }
-                }
-                // No.3
-                if (src[i][j + 1] < src[i][j]) {
-                    for (let m = 0; m < kLen; m++) {
-                        tmp[i][j + m + 1] = Math.max(k[0][m] * src[i][j], src[i][j + m + 1], tmp[i][j + m + 1]);
-                    }
-                }
-                // No.4
-                if (src[i + 1][j] < src[i][j]) {
-                    for (let m = 0; m < kLen; m++) {
-                        tmp[i + m + 1][j] = Math.max(k[0][m] * src[i][j], src[i + m + 1][j], tmp[i + m + 1][j]);
-                    }
-                }
-                // No.5
-                if (src[i - 1][j - 1] < src[i][j]) {
-                    for (let m = 0; m < dkLen; m++) {
-                        tmp[i - m - 1][j - m - 1] = Math.max(diagK[0][m] * src[i][j], src[i - m - 1][j - m - 1], tmp[i - m - 1][j - m - 1]);
-                    }
-                }
-                // No.6
-                if (src[i - 1][j + 1] < src[i][j]) {
-                    for (let m = 0; m < dkLen; m++) {
-                        tmp[i - m - 1][j + m + 1] = Math.max(diagK[0][m] * src[i][j], src[i - m - 1][j + m + 1], tmp[i - m - 1][j + m + 1]);
-                    }
-                }
-                // No.7
-                if (src[i + 1][j - 1] < src[i][j]) {
-                    for (let m = 0; m < dkLen; m++) {
-                        tmp[i + m + 1][j - m - 1] = Math.max(diagK[0][m] * src[i][j], src[i + m + 1][j - m - 1], tmp[i + m + 1][j - m - 1]);
-                    }
-                }
-                // No.8
-                if (src[i + 1][j + 1] < src[i][j]) {
-                    for (let m = 0; m < dkLen; m++) {
-                        tmp[i + m + 1][j + m + 1] = Math.max(diagK[0][m] * src[i][j], src[i + m + 1][j + m + 1], tmp[i + m + 1][j + m + 1]);
-                    }
-                }
-            }
-            tmp[i][j] = Math.max(src[i][j], tmp[i][j]);
-        }
-    }
-
-    for (let i = 0; i < len; i++) {
-        for (let j = 0; j < len; j++) {
-            wm[i][j] = tmp[i + offset][j + offset];
-        }
-    }
-
-    return wm;
+    
+    return filteredMap;
 }
 
-function blurWatermap(watermap) {
-    // gaussian blur
-    let len = watermap.length;
-    let src = Array.from(watermap);
-    let wm = Create2DArray(len, 0);
+function tiltMap(map, gravityCenter, waterDepth) {
+    const maxY = map.length;
+    const maxX = map[0].length;
+    
+    const tiltedMap = Create2DArray(maxY, 0);
+    let gravityPoint = {};
 
-    // border padding
-    src.unshift(watermap[0]);
-    src.push(watermap[len - 1]);
-    src[1].unshift(watermap[1][0]);
-    src[1].push(watermap[1][len - 1]);
+    switch(gravityCenter) {
+        case 1: // center
+            gravityPoint.x = parseInt(maxX / 2);
+            gravityPoint.y = parseInt(maxY / 2);
+            break;
+        case 2: // North center
+            gravityPoint.x = parseInt(maxX / 2);
+            gravityPoint.y = 0;
+            break;
+        case 3: // North - East
+            gravityPoint.x = maxX;
+            gravityPoint.y = 0;
+            break;
+        case 4: // East center
+            gravityPoint.x = maxX;
+            gravityPoint.y = parseInt(maxY  / 2);
+            break;
+        case 5: // South - East
+            gravityPoint.x = maxX;
+            gravityPoint.y = maxY;
+            break;
+        case 6: // South center
+            gravityPoint.x = parseInt(maxX / 2);
+            gravityPoint.y = maxY;
+            break;
+        case 7: // South - West
+            gravityPoint.x = 0;
+            gravityPoint.y = maxY;
+            break;
+        case 8: // West center
+            gravityPoint.x = 0;
+            gravityPoint.y = parseInt(maxY / 2);
+            break;
+        case 9: // North - West
+            gravityPoint.x = 0;
+            gravityPoint.y = 0;
+            break;
+        case 10: // North side
+            gravityPoint.y = 0;
+            break;
+        case 11: // East side
+            gravityPoint.x = maxX;
+            break;
+        case 12: // South side
+            gravityPoint.y = maxY;
+            break;
+        case 13: // West side
+            gravityPoint.x = 0;
+            break;
+        default:
+            // do nothing
+    }
 
-    for (let i = 0; i < len - 1; i++) {
-        // border padding
-        src[i + 2].unshift(watermap[i + 1][0]);
-        src[i + 2].push(watermap[i + 1][len - 1]);
+    for (let y = 0; y < maxY; y++) {
+        for (let x = 0; x < maxX; x++) {
+            let h = map[y][x];
+            let correction = 0; 
+            
+            //calculate the relative distance to the gravity center or side
+            let relDistance = 0;
+            switch(gravityCenter) {
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                    //pythagoras for distance
+                    relDistance = Math.sqrt(Math.pow(gravityPoint.x - x, 2) + Math.pow(gravityPoint.y - y, 2)) / maxY;
+                    break;
+                case 10:
+                case 12:
+                    // north and south side, only take y distance into account
+                    relDistance = Math.abs(gravityPoint.y - y) / maxY;
+                    break;
+                case 11:
+                case 13:
+                    // east and west side, only take x distance into account
+                    relDistance = Math.abs(gravityPoint.x - x) / maxX;
+                    break;
+                default:
+                    // do nothing
+            }
 
-        for (let j = 0; j < len; j++) {
-            wm[i][j] = (src[i][j] + src[i][j + 2] + src[i + 2][j] + src[i + 2][j + 2]) / 16
-                + (src[i][j + 1] + src[i + 1][j] + src[i + 1][j + 2] + src[i + 2][j + 1]) / 8
-                + src[i + 1][j + 1] / 4;
+            tiltedMap[y][x] = h +  Math.round(waterDepth * relDistance * 100) / 100;;
         }
     }
 
-    for (let j = 0; j < len; j++) {
-        wm[len - 1][j] = (src[len - 1][j] + src[len - 1][j + 2] + src[len + 1][j] + src[len + 1][j + 2]) / 16
-            + (src[len - 1][j + 1] + src[len][j] + src[len][j + 2] + src[len + 1][j + 1]) / 8
-            + src[len][j + 1] / 4;
+    if(gravityCenter == 0) {
+        console.log('no map tilting');
+    } else{
+        console.log(`tilted map in direction ${gravityCenter} with ${waterDepth} m`);
+    }
+    return tiltedMap;
+}
+
+function interpolateArray(data, fitCount) {
+
+    var linearInterpolate = function (before, after, atPoint) {
+        return before + (after - before) * atPoint;
+    };
+
+    var newData = new Array();
+    var springFactor = new Number((data.length - 1) / (fitCount - 1));
+    newData[0] = data[0]; // for new allocation
+    for ( var i = 1; i < fitCount - 1; i++) {
+        var tmp = i * springFactor;
+        var before = new Number(Math.floor(tmp)).toFixed();
+        var after = new Number(Math.ceil(tmp)).toFixed();
+        var atPoint = tmp - before;
+        newData[i] = linearInterpolate(data[before], data[after], atPoint);
+    }
+    newData[fitCount - 1] = data[data.length - 1]; // for new allocation
+    return newData;
+}
+
+function levelMap(map, min, max, style) {
+    let curve;
+
+
+    switch(style) {
+        case 1: // reserved for testing
+            curve = [0.1, 1, 1.9];            
+            break;
+        case 2: // coastline and plains
+            curve = [0.15, 0.45, 0.75, 1.1, 1.4, 1.7, 1.9, 1.9];
+            break;
+        case 3: // agressive coastline and plains
+            curve = [0.1, 0.2, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6];
+            break;
+        case 9:
+            curve = [0.1, 0.2, 0.5, 1, 1.3, 1.7, 2.5];
+            break;
+        default:
+            console.log('no map leveling');
+            return map;
     }
 
-    return wm;
+    const interpolatedCurve = interpolateArray(curve, 256);
+
+    const maxY = map.length;
+    const maxX = map[0].length;
+    const elevationStep = Math.round((max - min) / interpolatedCurve.length);
+
+    // calculate the minimum level for each index in the curve
+    let levels = [min]; // size of the levels array will be 1 larger then the curve
+    let lastLevel = min;
+    for(let i = 0; i < interpolatedCurve.length; i++) {
+        levels.push(Math.round((lastLevel + elevationStep * interpolatedCurve[i]) * 10) / 10);
+        lastLevel = levels[i + 1];
+    }
+
+    // debugging
+    //let debug = [];
+    //for(let i = 0; i < interpolatedCurve.length; i++) {
+    //    debug.push([i, interpolatedCurve[i], levels[i]]);
+    //}
+    //exportToCSV(debug);
+
+    const leveledMap = Create2DArray(maxY, 0);
+
+    let highestHight = 0;
+
+    for (let y = 0; y < maxY; y++) {
+        for (let x = 0; x < maxX; x++) {
+            let h = map[y][x];
+
+            if(h - min > 0) {
+                // calcualte the index based on the position in the heights array
+                let idx = Math.min(interpolatedCurve.length - 1, Math.floor((h - min) / elevationStep));
+                h = levels[idx] + ((h - levels[idx]) * interpolatedCurve[idx]);
+                h = Math.round(h * 10) / 10;
+            }
+           leveledMap[y][x] = h;
+
+           if(h > highestHight) highestHight = h;
+        }
+    }
+
+    console.log(`min ${min} max ${max} highest high ${highestHight}`);
+    // after releveling the map, it is possible that the highest point has become higher
+    // rescale back to original min max
+    let rescale = 10;
+    if (highestHight > max) {
+        rescale = Math.floor((max - min) / highestHight * 100) / 10; // little speed gain, by taking calc out the loop
+        for (let y = 0; y < maxY; y++) {
+            for (let x = 0; x < maxX; x++) {
+                let h = leveledMap[y][x];
+                if(h - min > 0) {
+                    leveledMap[y][x] = Math.round(h * rescale) / 10;
+                }
+            }
+        }
+    }
+
+    console.log(`leveled map with style ${style}, rescale ${rescale/10}`);
+    return leveledMap;
 }
 
 function toHeightmap(tiles, distance) {
@@ -1095,37 +1330,95 @@ function toTerrainRGB(heightmap) {
     return canvas;
 }
 
-function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
+function toCitiesmap(heightmap, watermap) {
+    const citiesmapSize = 1081;
+
     // cities has L/H byte order
-    let citiesmap = new Uint8ClampedArray(2 * 1081 * 1081);
-    let wMap;
+    let citiesmap = new Uint8ClampedArray(2 * citiesmapSize * citiesmapSize);
+    let workingmap = Create2DArray(citiesmapSize, 0); 
 
-    // water depth is unaffected by height scale
-    let depthUnits = scope.waterDepth / 0.015625;
-
-    let distSlope = scope.wsSlope / 1;
-
-    // option
-    if (document.getElementById('blurWs').checked) {
-        wMap = blurWatermap(setWatersideSlope(watermap, distSlope));
-    } else {
-        wMap = setWatersideSlope(watermap, distSlope);
-    }
-
-    for (let y = 0; y < 1081; y++) {
-        for (let x = 0; x < 1081; x++) {
-
-            // scale the height, taking baseLevel and scale into account
-            let height = (heightmap[y + yOffset][x + xOffset] / 10 - scope.baseLevel) / 0.015625 * parseFloat(scope.heightScale) / 100;
-
+    // correct the waterDepth for the scaling. 
+    // in the final pass, it will be scaled back. Round to 1 decimal
+    let waterDepth = Math.round(scope.waterDepth /  parseFloat(scope.heightScale) * 100 * 10) / 10;
+    
+    // watermap: => normalized depth between 0 => deepest water, 1 => land
+    
+    for (let y = 0; y < citiesmapSize; y++) {
+        for (let x = 0; x < citiesmapSize; x++) {
+            // stay with ints as long as possible
+            let height = (heightmap[y][x] - scope.baseLevel * 10);
+            
             // raise the land by the amount of water depth
             // a height lower than baselevel is considered to be the below sea level and the height is set to 0
-            let h = Math.max(0, Math.round(height + (depthUnits * wMap[y + yOffset][x + xOffset])));
+            // water depth is unaffected by height scale
+            // the map is unscaled at this point, so high mountains above 1024 meter can be present
+            let calcHeight = (height + Math.round(waterDepth * 10 * watermap[y][x])) / 10;
+            workingmap[y][x] = Math.max(0, calcHeight);                       
+        }
+    }
+
+    // level correction, for specific needs
+    // to smooth plains and dramatize mountains or level a mountanus coastline
+    workingmap = levelMap(workingmap, grid.minHeight + waterDepth, grid.maxHeight, scope.levelCorrection);
+
+    // smooth the plains and wateredges in a number of passes
+    let passes = parseInt(document.getElementById('blurPasses').value);
+    let postPasses = parseInt(document.getElementById('blurPostPasses').value);
+    let plainsHeight = parseInt(document.getElementById('plainsHeight').value);
+    for(let l=0; l<passes; l++) {
+        workingmap = filterMap(workingmap, 0, plainsHeight + waterDepth, meanKernel);
+    }
+
+    // sharpen the mountains, for more dramatic effect
+    for(let l=0; l<postPasses; l++) {
+        workingmap = filterMap(workingmap, plainsHeight + waterDepth, grid.maxHeight, sharpenKernel);
+    } 
+
+    // if there where enough passes, all the small streams on the plains are faded.
+    // so redraw them, with little extra depth
+    let streamDepth = parseInt(document.getElementById('streamDepth').value);
+    let highestWaterHeight = 0;
+    if(document.getElementById('drawStrm').checked) {
+            for (let y = 0; y < citiesmapSize; y++) {
+            for (let x = 0; x < citiesmapSize; x++) {
+                let height = workingmap[y][x];
+                if(height > highestWaterHeight) {
+                        highestWaterHeight = height;
+                } 
+                // prevent drawing below the seabed
+                if (height > streamDepth) {
+                    workingmap[y][x] = height - (1 - watermap[y][x]) * streamDepth;                
+                }
+            }
+        }
+    }
+
+    // tilt the map in the direction of gravity, so water always flows to the lowest point
+    let tiltHeight = parseInt(document.getElementById('tiltHeight').value);
+    // correct the tiltHeight for the scale. In the final pass, it will be corrected back
+    tiltHeight = Math.round(tiltHeight /  parseFloat(scope.heightScale) * 100 * 10) / 10;
+    workingmap = tiltMap(workingmap, scope.gravityCenter, tiltHeight);
+
+    // finally, finish the drawn streams with a light smoothing
+    // the streams are drawn over the entire map, so post process the entire map
+    for(let l=0; l<postPasses; l++) {
+        workingmap = filterMap(workingmap, 0, highestWaterHeight, meanKernel);
+    }     
+
+    // debug
+    //exportToCSV(workingmap);
+
+    // convert the normalized and smoothed map to a cities skylines map/
+    // As this is the final step, take scale into account
+    for (let y = 0; y < citiesmapSize; y++) {
+        for (let x = 0; x < citiesmapSize; x++) {
+            // get the value in 1/10meyers and scale and convert to cities skylines 16 bit int
+            let h = Math.round(workingmap[y][x] / 100 * parseFloat(scope.heightScale) / 0.015625);
 
             if (h > 65535) h = 65535;
 
             // calculate index in image
-            let index = y * 1081 * 2 + x * 2;
+            let index = y * citiesmapSize * 2 + x * 2;
 
             // cities used hi/low 16 bit
             citiesmap[index + 0] = h >> 8;
@@ -1133,17 +1426,19 @@ function toCitiesmap(heightmap, watermap, xOffset, yOffset) {
         }
     }
 
+    //exportToCSV(citiesmap);
+
     // draw a grid on the image
     if (document.getElementById('drawGrid').checked) {
-        for (let y = 0; y < 1081; y++) {
-            for (let x = 0; x < 1081; x++) {
+        for (let y = 0; y < citiesmapSize; y++) {
+            for (let x = 0; x < citiesmapSize; x++) {
 
                 if (y % 120 == 0 || x % 120 == 0) {
                     // calculate index in image
-                    let index = y * 1081 * 2 + x * 2;
+                    let index = y * citiesmapSize * 2 + x * 2;
 
                     // create pixel
-                    citiesmap[index + 0] = 63;
+                    citiesmap[index + 0] = 127;
                     citiesmap[index + 1] = 255;
                 }
             }
