@@ -1,6 +1,6 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/sysoppl/cities-skylines-heightmap-generator/badge)](https://www.codefactor.io/repository/github/sysoppl/cities-skylines-heightmap-generator)
 *This is a fork of original heightmap builder (JBerg60/cities-heightmap)*
-
+# Updated! Should work now!
 # Cities: Skylines online heightmap generator
 Online heightmap generator for Cities: Skylines
 **Check it: https://heightmap.skydark.pl**
