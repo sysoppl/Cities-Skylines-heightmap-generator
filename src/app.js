@@ -44,7 +44,7 @@ if (debug) while (debugElements.length > 0) {
 }
 
 // MapBox API token, temperate email for dev
-mapboxgl.accessToken = 'pk.eyJ1IjoiYmVydGRldm4iLCJhIjoiY2t2dXF1ZGhyMHlteTJ2bzJjZzE3M24xOCJ9.J5skknTRyh-6RoDWD4kw2w';
+mapboxgl.accessToken = 'pk.eyJ1IjoidW5pdmVyc2FscGFyayIsImEiOiJjbHRhZ2hxNW0xYTlkMmpxbW9xb3ZvNnZiIn0.UHNxtqsU8zLTHgsiml3xgw';
 
 var map = new mapboxgl.Map({
     container: 'map',                               // Specify the container ID
