@@ -1,4 +1,4 @@
-// <reference path='https://api.tiles.mapbox.com/mapbox-gl-js/v1.8.0/mapbox-gl.js' />
+// <reference path='https://api.tiles.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js' />
 
 'use strict'
 
@@ -43,13 +43,14 @@ if (debug) while (debugElements.length > 0) {
     debugElements[0].classList.remove('debug');
 }
 
-// MapBox API token, temperate email for dev
-mapboxgl.accessToken = 'pk.eyJ1IjoiYmVydGRldm4iLCJhIjoiY2t2dXF1ZGhyMHlteTJ2bzJjZzE3M24xOCJ9.J5skknTRyh-6RoDWD4kw2w';
+// MapBox API token
+// Go to https://account.mapbox.com/auth/signup/ to apply a new api key
+mapboxgl.accessToken = 'you need apply a new api key';
 
 var map = new mapboxgl.Map({
     container: 'map',                               // Specify the container ID
-    style: 'mapbox://styles/mapbox/outdoors-v11',   // Specify which map style to use
-    //style: 'mapbox://styles/mapbox/streets-v11',  // Specify which map style to use
+    style: 'mapbox://styles/mapbox/outdoors-v12',   // Specify which map style to use
+    //style: 'mapbox://styles/mapbox/streets-v12',  // Specify which map style to use
     center: [grid.lng, grid.lat],                   // Specify the starting position [lng, lat]
     zoom: grid.zoom,                                // Specify the starting zoom
     preserveDrawingBuffer: true
@@ -155,7 +156,7 @@ function addSource() {
 
     map.addSource('mapbox-streets', {
         type: 'vector',
-        url: 'mapbox://mapbox.mapbox-streets-v8'
+        url: 'mapbox://mapbox.mapbox-streets-v12'
     });
 
     map.addSource('contours', {
@@ -408,9 +409,9 @@ function getGrid(lng, lat, size) {
 function loadSettings() {
     let stored = JSON.parse(localStorage.getItem('grid')) || {};
     
-    // San Francisco
-    stored.lng = parseFloat(stored.lng) || -122.43877;
-    stored.lat = parseFloat(stored.lat) || 37.75152;
+    // Shanghai
+    stored.lng = parseFloat(stored.lng) || 121.4768433;
+    stored.lat = parseFloat(stored.lat) || 31.2306463;
     
     stored.zoom = parseFloat(stored.zoom) || 11.0;
     
