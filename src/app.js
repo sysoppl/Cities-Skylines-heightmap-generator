@@ -43,9 +43,9 @@ if (debug) while (debugElements.length > 0) {
     debugElements[0].classList.remove('debug');
 }
 
-// MapBox API token
+// MapBox API token, temperate email for dev
 // Go to https://account.mapbox.com/auth/signup/ to apply a new api key
-mapboxgl.accessToken = 'you need apply a new api key';
+mapboxgl.accessToken = 'pk.eyJ1IjoiYmVydGRldm4iLCJhIjoiY2t2dXF1ZGhyMHlteTJ2bzJjZzE3M24xOCJ9.J5skknTRyh-6RoDWD4kw2w';
 
 var map = new mapboxgl.Map({
     container: 'map',                               // Specify the container ID
