@@ -409,9 +409,9 @@ function getGrid(lng, lat, size) {
 function loadSettings() {
     let stored = JSON.parse(localStorage.getItem('grid')) || {};
     
-    // Shanghai
-    stored.lng = parseFloat(stored.lng) || 121.4768433;
-    stored.lat = parseFloat(stored.lat) || 31.2306463;
+    // San Francisco
+    stored.lng = parseFloat(stored.lng) || -122.43877;
+    stored.lat = parseFloat(stored.lat) || 37.75152;
     
     stored.zoom = parseFloat(stored.zoom) || 11.0;
     
