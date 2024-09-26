@@ -43,8 +43,8 @@ if (debug) while (debugElements.length > 0) {
     debugElements[0].classList.remove('debug');
 }
 
-// MapBox API token, temperate email for dev
-mapboxgl.accessToken = 'pk.eyJ1IjoiYmVydGRldm4iLCJhIjoiY2t2dXF1ZGhyMHlteTJ2bzJjZzE3M24xOCJ9.J5skknTRyh-6RoDWD4kw2w';
+// MapBox API token, just variable to hold user api token later
+mapboxgl.accessToken = '';
 
 var map = new mapboxgl.Map({
     container: 'map',                               // Specify the container ID
