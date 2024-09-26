@@ -48,7 +48,7 @@ mapboxgl.accessToken = '';
 
 var map = new mapboxgl.Map({
     container: 'map',                               // Specify the container ID
-    style: 'mapbox://styles/mapbox/outdoors-v11',   // Specify which map style to use
+    style: 'mapbox://styles/mapbox/outdoors-v12',   // Specify which map style to use
     //style: 'mapbox://styles/mapbox/streets-v11',  // Specify which map style to use
     center: [grid.lng, grid.lat],                   // Specify the starting position [lng, lat]
     zoom: grid.zoom,                                // Specify the starting zoom
@@ -155,7 +155,7 @@ function addSource() {
 
     map.addSource('mapbox-streets', {
         type: 'vector',
-        url: 'mapbox://mapbox.mapbox-streets-v8'
+        url: 'mapbox://mapbox.mapbox-streets-v12'
     });
 
     map.addSource('contours', {
