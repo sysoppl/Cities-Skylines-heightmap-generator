@@ -341,13 +341,7 @@ function deleteCaches() {
 
 function setMapStyle(el) {
     const layerId = el.id;
-    let styleName = map.getStyle().metadata['mapbox:origin'];
-    if (!(styleName)) {
-        styleName = 'satellite-v9';
-    }
-    if (layerId != styleName) {
-        map.setStyle('mapbox://styles/mapbox/' + layerId);
-    }
+    map.setStyle('mapbox://styles/mapbox/' + layerId);
 }
 
 function setLngLat(mode) {
