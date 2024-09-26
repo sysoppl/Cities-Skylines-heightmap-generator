@@ -1,57 +1,60 @@
-[![CodeFactor](https://www.codefactor.io/repository/github/sysoppl/cities-skylines-heightmap-generator/badge)](https://www.codefactor.io/repository/github/sysoppl/cities-skylines-heightmap-generator)
-*This is a fork of original heightmap builder (JBerg60/cities-heightmap)*
-# Updated! Should work now!
-# Cities: Skylines online heightmap generator
-Online heightmap generator for Cities: Skylines
-**Check it: https://heightmap.skydark.pl**
- ---
- 
+*This is a fork of the original heightmap builder (JBerg60/cities-heightmap)*
+
+# Cities: Skylines Online Heightmap Generator
+
+Generate heightmaps for Cities: Skylines with ease!  
+**Check it out: [heightmap.skydark.pl](https://heightmap.skydark.pl)**
+
+> [!WARNING]
+> You NEED to set your own mapbox API key in settings to make this app work for you!
 
 ## Features
-- easy to use interface
-- takes a 18 x 18 km square from a map
-- can produce png, raw images and zip packages
+- **User-friendly interface**
+- **Resizable** map area selection
+- Export options: **PNG**, **RAW images**, and **ZIP packages**
 
-## How to
-1. Select area that you want to download  
-![obraz](https://user-images.githubusercontent.com/30871217/123680703-4ebaa880-d849-11eb-8b74-b254e91ef44d.png)  
-Green zone shows playable tiles
+## How to Use
 
+1. **Enter own Mapbox API token**
+   Expand settings (I icon in navbar), paste your own API key, save and refresh the page
 
-2. Choose the options that suit you  
-![obraz](https://user-images.githubusercontent.com/30871217/123449129-aa7ffa00-d5db-11eb-9eb5-f2395dc4f173.png)
+3. **Select the Area**  
+   Choose the area you want to download. The green zone indicates playable tiles.  
+   ![Select Area](https://user-images.githubusercontent.com/30871217/123680703-4ebaa880-d849-11eb-8b74-b254e91ef44d.png)
 
-3. To download use one of available options  
-![image](https://user-images.githubusercontent.com/30871217/132255804-7cbe3e0a-f3f0-4b19-bd2f-0cf434457f09.png)
+4. **Choose Your Options**  
+   Customize the settings to fit your needs.  
+   ![Choose Options](https://user-images.githubusercontent.com/30871217/123449129-aa7ffa00-d5db-11eb-9eb5-f2395dc4f173.png)
 
+5. **Download**  
+   Select one of the available download options.  
+   ![Download Options](https://user-images.githubusercontent.com/30871217/132255804-7cbe3e0a-f3f0-4b19-bd2f-0cf434457f09.png)
 
-## Info panel
-You can modify settings in info panel for your height map so it fits your needs.  
+## Info Panel
+Modify settings in the info panel to tailor your heightmap.
 
-  ---------------------------
-  
-_Original text by original author below_
+---
 
+_Original text by the original author below_
 
 ### Settings
-- **Sea level**: the height that will be used as sea level. For land adjacent to the sea or ocean, this will usual be 0.  
-For land located in mountains, this will usual be the minimum height of the square.
+- **Sea Level:** Set the height for sea level. For coastal areas, this is usually 0. For mountainous regions, use the minimum height of the area.
+- **Height Scale:** Cities: Skylines supports heights up to 1024 meters. At 100%, the map is transferred 1:1. Increasing the scale accentuates mountains.
+- **Below Sea Level:** Set the depth before hitting the absolute minimum. Useful for creating lakes or canals at sea level.
+- **Rise Only Land:** Keeps sea level at 0 meters while raising the land. Useful for creating elevated land or lakes not adjacent to the ocean.
 
-- **height scale**: cities uses heights up to 1024 meters. When the scale is 100%, the map is transferred 1:1 to cities. When the scale is above 100%, heights are stretched, giving mountains more accent. 
+### Settings Examples
+1. **Mountainous Area (e.g., Alps)**
+   - Minimum height: 200 meters
+   - Maximum height: 2200 meters
+   - Auto settings: Sea level = 200m, Height scale = 50%, Below sea level = 5m, All land raised.
+   - Custom: Only land rise, Below sea level = 10m. In the map editor, setting sea level to 9m gives a 1m shoreline rise.
 
-- **Below sea level**: the is the depth that can be dug in the land before hitting absolute minimum. Handy for creating lakes at sea level, or canals that are at sea level.
+2. **Coastal City (e.g., San Francisco)**
+   - Minimum height: 0 meters
+   - Maximum height: 350 meters
+   - Auto settings: Sea level = 0m, Height scale = 300%, Below sea level = 20m, Only land raised.
 
-- **rise only land**: the sea level is kept at 0 meters, but the land gets a extra rise. This creates the possibility of creating land that is risen a small amount out of the sea. When all is raised, it creates the possibility to create a lake, when land is not adjacent to the ocean. 
-
-### Settings examples:
-- A square has a minimum height of 200 meters and a maximum height of 2200 meters (like the Alps), auto settings are calculated like this:  
-Sea level is set to 200 meters, Height scale to 50%, below sea level to 5 meters and all land is raised.
-By setting only land rise, and below sea level to 10, the land will raise 10 meters out of the sea. In the map editor from cities, the sea level can also be adjusted. Wen set to 9 meters, this gives a shoreline that is risen 1 meter out of the sea.
-
-- A square has a minimum height of 0 meters and a maximum of 350 meters (like San Francisco), auto settings are calculated like this:  
-Sea level is set to 0 meters, Height scale to 300%, below sea level to 20 meters and only land is raised.
-
-
-## Frequently asked questions
-Q: when downloading the map Chrome says ```heightmap.raw is not commonly downloaded and may be dangerous```  
-A: just click on the arrow up and choose ```keep```. Height maps are not dangerous at al ;)
+## Frequently Asked Questions
+**Q:** When downloading the map, Chrome says `heightmap.raw is not commonly downloaded and may be dangerous`.  
+**A:** Click the arrow up and choose `keep`. Heightmaps are safe to download.
