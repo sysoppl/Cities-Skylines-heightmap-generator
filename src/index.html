@@ -30,197 +30,220 @@
 </head>
 
 <body class="row">
-    <div class="sideBar column">
-        <ul>
-            <li><a onclick="togglePanel(0)" title="Settings"><i class="icon fas fa-info-circle"></i></a></li>
-            <li><a onclick="togglePanel(1)" title="Change map style"><i class="icon fas fa-layer-group"></i></a></li>
-            <li><a onclick="togglePanel(2)" title="Set lng/lat"><i class="icon fas fa-map-marker-alt"></i></a></li>
-        </ul>
-        <ul class="fill">
-            <li><a onclick="getHeightmap(0)" title="Download RAW height map"><i class="fas fa-file-download"></i></a></li>
-            <li><a onclick="getHeightmap(1)" title="Download PNG height map"><i class="fas fa-file-image"></i></a></li>
-            <li><a onclick="getMapImage()" title="Download map image"><i class="fas fa-map"></i></a></li>
-            <li><a onclick="getHeightmap(3)" title="Download ZIP with PNG and lng/lat informations"><i class="fas fa-file-archive"></i></a></li>
-			<li><a onclick="getOSMData()" title="Download OSM map (long wait)"><i class="fas fa-road"></i></a></li>
-        </ul>
-        <ul class="fill">
-            <li><a onclick="showHeightContours(this)" title="Show height contours" id="showHeightContours"><i class="fas fa-mountain"></i></a></li>
-            <li><a onclick="showWaterContours(this)" title="Show water contours" id="showWaterContours"><i class="fas fa-water"></i></a></li>
-        </ul>
-        <ul class="fill" id="dcBox">
-            <li><a onclick="deleteCaches()" title="Delete caches" id="deleteCaches"><i class="fas fa-database"></i><i class="fas fa-times"></i></a></li>
-        </ul>
-        <ul>
-            <li><a onclick="zoomIn()" title="Zoom in"><i class="fas fa-search-plus"></i></a></li>
-            <li><a onclick="zoomOut()" title="Zoom out"><i class="fas fa-search-minus"></i></a></li>
-        </ul>
-        <ul>
-            <li><a href="https://github.com/sysoppl/cities-heightmap" target="_blank" title="Help"><i class="far fa-question-circle"></i></a></li>
-            <li><a href="#" onclick="getHeightmap(255)" title="Dwnload tiles map (Terrain-RGB)"><i class="fas fa-bug"></i></a></li>
-        </ul>
-    </div>
+<div class="sideBar column">
+    <ul>
+        <li><a onclick="togglePanel(0)" title="Settings"><i class="icon ti ti-info-circle"></i></a></li>
+        <li><a onclick="togglePanel(1)" title="Change map style"><i class="icon ti ti-map-question"></i></a></li>
+        <li><a onclick="togglePanel(2)" title="Set lng/lat"><i class="icon ti ti-map-pin"></i></a></li>
+    </ul>
+    <ul class="fill">
+        <li><a onclick="getHeightmap(0)" title="Download RAW height map"><i class="ti ti-file-download"></i></a></li>
+        <li><a onclick="getHeightmap(1)" title="Download PNG height map"><i class="ti ti-file-type-png"></i></a></li>
+        <li><a onclick="getMapImage()" title="Download map image"><i class="ti ti-map"></i></a></li>
+        <li><a onclick="getHeightmap(3)" title="Download ZIP with PNG and lng/lat informations"><i class="ti ti-file-archive"></i></a></li>
+        <li><a onclick="getOSMData()" title="Download OSM map (long wait)"><i class="ti ti-road"></i></a></li>
+    </ul>
+    <ul class="fill">
+        <li><a onclick="showHeightContours(this)" title="Show height contours" id="showHeightContours"><i class="ti ti-mountain"></i></a></li>
+        <li><a onclick="showWaterContours(this)" title="Show water contours" id="showWaterContours"><i class="ti ti-water"></i></a></li>
+    </ul>
+    <ul class="fill" id="dcBox">
+        <li><a onclick="deleteCaches()" title="Delete caches" id="deleteCaches"><i class="ti ti-database"></i><i class="ti ti-x"></i></a></li>
+    </ul>
+    <ul>
+        <li><a onclick="zoomIn()" title="Zoom in"><i class="ti ti-zoom-in"></i></a></li>
+        <li><a onclick="zoomOut()" title="Zoom out"><i class="ti ti-zoom-out"></i></a></li>
+    </ul>
+    <ul>
+        <li><a href="https://github.com/sysoppl/cities-heightmap" target="_blank" title="Help"><i class="ti ti-help"></i></a></li>
+        <li><a href="#" onclick="getHeightmap(255)" title="Dwnload tiles map (Terrain-RGB)"><i class="ti ti-bug"></i></a></li>
+    </ul>
+</div>
 
-    <div class="fill wrapper">
-        <div id="map" class="content"></div>
-        <canvas id="wMap-canvas" width="400" height="400" ></canvas> <!-- for debug -->
+<div class="fill wrapper">
+    <div id="map" class="content"></div>
+    <canvas id="wMap-canvas" width="400" height="400" ></canvas> <!-- for debug -->
 
-        <div id="infoPanel" class="panel slide-out hidden">
-            <div id="geocoder" class="geocoder"></div>
-            <div class="infotable">
-                <div class="info">
-                    <dl class="lnglat">
-                        <div><dt>Longitude:</dt><dd class="unit" id="lng"></dd><dd><abbr>&#176;</abbr></dd></div>
-                        <div><dt>Latitude:</dt><dd class="unit" id="lat"></dd><dd><abbr>&#176;</abbr></dd></div>
-                    </dl>
-                    <dl class="height">
-                        <div><dt>Min. height:</dt><dd class="unit" id="minh"></dd><dd><abbr>m</abbr></dd></div>
-                        <div><dt>Max. height:</dt><dd class="unit" id="maxh"></dd><dd><abbr>m</abbr></dd></div>
-                    </dl>
+    <div id="infoPanel" class="panel slide-out hidden">
+        <div id="geocoder" class="geocoder"></div>
+        <div class="infotable">
+            <div class="info">
+                <dl class="lnglat">
+                    <div><dt>Longitude:</dt><dd class="unit" id="lng"></dd><dd><abbr>&#176;</abbr></dd></div>
+                    <div><dt>Latitude:</dt><dd class="unit" id="lat"></dd><dd><abbr>&#176;</abbr></dd></div>
+                </dl>
+                <dl class="height">
+                    <div><dt>Min. height:</dt><dd class="unit" id="minh"></dd><dd><abbr>m</abbr></dd></div>
+                    <div><dt>Max. height:</dt><dd class="unit" id="maxh"></dd><dd><abbr>m</abbr></dd></div>
+                </dl>
+            </div>
+
+
+            <div id="apiTokenContainer">
+                <dl class="apitoken">
+                    <label for="mapboxApiToken">Mapbox API Token:</label>
+                    <input type="text" id="mapboxApiToken" placeholder="Enter your Mapbox API token">
+                    <button onclick="saveApiToken()">Save Token</button>
+                </dl>
+            </div>
+
+
+            <div class="settings">
+                <header><h4>Size and scale</h4><hr></header>
+                <dl>
+                    <dt>Map size:</dt>
+                    <dd><input type="range" data-model="mapSize" min="17.28" max="69.12" step="0.01" id="mapSize"
+                               onkeyup="changeMapsize(this)" onmouseup="changeMapsize(this)"></dd>
+                    <dd><input type="number" data-model="mapSize" min="17.28" max="69.12" step="0.01"
+                               onkeyup="changeMapsize(this)" onmouseup="changeMapsize(this)"></dd>
+                    <dd><abbr>km</abbr></dd>
+                    <dt>Base level:</dt>
+                    <dd><input type="range" data-model="baseLevel" min="-1023.9" max="1023.9" step="0.1" id="baseLevel"></dd>
+                    <dd><input type="number" data-model="baseLevel" min="-1023.9" max="1023.9" step="0.1"></dd>
+                    <dd><abbr>m</abbr></dd>
+                    <dd><button class="calc" onclick="setBaseLevel()"
+                                title="Set to the same value as Min. height"><i class="ti ti-calculator"></i></button></dd>
+                    <dt>Height scale:</dt>
+                    <dd><input type="range" data-model="heightScale" min="0" max="250" step="1" id="heightScale"></dd>
+                    <dd><input type="number" data-model="heightScale" step="1"></dd>
+                    <dd><abbr>%</abbr></dd>
+                    <dd><button class="calc" onclick="setHeightScale()"
+                                title="Set to the maximum scale possible with the current settings"><i class="ti ti-calculator"></i></button></dd>
+                    <dt class="withUnit">Reference height scale:</dt>
+                    <dd class="unit2" id="rHeightscale">100.0</dd>
+                    <dd><abbr>%</abbr></dd>
+                </dl>
+                <header><h4>Water area</h4><hr></header>
+                <dl>
+                    <dt>Water depth:</dt>
+                    <dd><input type="range" data-model="waterDepth" min="0" max="60" step="1" id="waterDepth"></dd>
+                    <dd><input type="number" data-model="waterDepth" min="0" max="60" step="1"></dd>
+                    <dd><abbr>m</abbr></dd>
+                    <dt>Center of gravity:</dt>
+                    <dd class="wsSlp">
+                        <select data-model="gravityCenter">
+                            <option value="0">None</option>
+                            <option value="1">Center</option>
+                            <option value="2">North center</option>
+                            <option value="10">North side</option>
+                            <option value="3">North-East</option>
+                            <option value="4">East center</option>
+                            <option value="11">East side</option>
+                            <option value="5">South-East</option>
+                            <option value="6">South center</option>
+                            <option value="12">South side</option>
+                            <option value="7">South-West</option>
+                            <option value="8">West center</option>
+                            <option value="13">West side</option>
+                            <option value="9">North-West</option>
+                        </select><i class="ti ti-chevron-down"></i>
+                    </dd>
+                    <dd>@&nbsp;&nbsp;</dd>
+                    <dd><input type="number" min="0" max="250" step="1" id="tiltHeight"></dd>
+                    <dd><abbr>m</abbr></dd>
+                    <dt class="withCb">Streams:</dt>
+                    <dd><input type="checkbox" id="drawStrm"><i class="ti ti-check"></i></dd>
+                </dl>
+                <header><h4>Draw options</h4><hr></header>
+                <dl>
+                    <dt class="withCb">Marker: </dt>
+                    <dd><input type="checkbox" id="drawMarker"><i class="ti ti-check"></i></dd>
+                    <dt></dt>
+                    <dt class="withCb">Grid: </dt>
+                    <dd><input type="checkbox" id="drawGrid"><i class="ti ti-check"></i></dd>
+                </dl>
+                <header><h4>Smoothing &amp; leveling</h4><hr></header>
+                <div class="row">
+                    <div>
+                        <div class="vertinput">To (m)</div>
+                        <div><dd><input type="number" min="0" max="250" step="10" id="plainsHeight"></dd></div>
+                    </div>
+                    <div>
+                        <div class="vertinput">Passes</div>
+                        <div><dd><input type="number" min="0" max="25" step="1" id="blurPasses"></dd></div>
+                    </div>
+                    <div>
+                        <div class="vertinput">Post pas.</div>
+                        <div><dd><input type="number" min="0" max="10" step="1" id="blurPostPasses"></dd></div>
+                    </div>
+                    <div>
+                        <div class="vertinput">Stream depth</div>
+                        <div><dd><input type="number" min="0" max="10" step="1" id="streamDepth"></dd></div>
+                    </div>
                 </div>
-                <div class="settings">
-                    <header><h4>Size and scale</h4><hr></header>
+                <br>
+                <div class="row">
                     <dl>
-                        <dt>Map size:</dt>
-                            <dd><input type="range" data-model="mapSize" min="17.28" max="69.12" step="0.01" id="mapSize"
-                                onkeyup="changeMapsize(this)" onmouseup="changeMapsize(this)"></dd>
-                            <dd><input type="number" data-model="mapSize" min="17.28" max="69.12" step="0.01"
-                                onkeyup="changeMapsize(this)" onmouseup="changeMapsize(this)"></dd>
-                            <dd><abbr>km</abbr></dd>
-                        <dt>Base level:</dt>
-                            <dd><input type="range" data-model="baseLevel" min="-1023.9" max="1023.9" step="0.1" id="baseLevel"></dd>
-                            <dd><input type="number" data-model="baseLevel" min="-1023.9" max="1023.9" step="0.1"></dd>
-                            <dd><abbr>m</abbr></dd>
-                            <dd><button class="calc" onclick="setBaseLevel()"
-                                title="Set to the same value as Min. height"><i class="fas fa-calculator"></i></button></dd>
-                        <dt>Height scale:</dt>
-                            <dd><input type="range" data-model="heightScale" min="0" max="250" step="1" id="heightScale"></dd>
-                            <dd><input type="number" data-model="heightScale" step="1"></dd>
-                            <dd><abbr>%</abbr></dd>
-                            <dd><button class="calc" onclick="setHeightScale()"
-                                title="Set to the maximum scale possible with the current settings"><i class="fas fa-calculator"></i></button></dd>
-                         <dt class="withUnit">Reference height scale:</dt>
-                            <dd class="unit2" id="rHeightscale">100.0</dd>
-                            <dd><abbr>%</abbr></dd>
-                        </dl>
-                    <header><h4>Water area</h4><hr></header>
-                    <dl>
-                        <dt>Water depth:</dt>
-                            <dd><input type="range" data-model="waterDepth" min="0" max="60" step="1" id="waterDepth"></dd>
-                            <dd><input type="number" data-model="waterDepth" min="0" max="60" step="1"></dd>
-                            <dd><abbr>m</abbr></dd>                                                
-                        <dt>Center of gravity:</dt>
-                        <dd class="wsSlp">
-                            <select data-model="gravityCenter">
+                        <dt>Level correction:</dt>
+                        <dd class="wsSlp wideSelect">
+                            <select data-model="levelCorrection">
                                 <option value="0">None</option>
-                                <option value="1">Center</option>
-                                <option value="2">North center</option>
-                                <option value="10">North side</option>
-                                <option value="3">North-East</option>
-                                <option value="4">East center</option>
-                                <option value="11">East side</option>
-                                <option value="5">South-East</option>
-                                <option value="6">South center</option>
-                                <option value="12">South side</option>
-                                <option value="7">South-West</option>
-                                <option value="8">West center</option>
-                                <option value="13">West side</option>
-                                <option value="9">North-West</option>
-                            </select><i class="fas fa-chevron-down"></i>
+                                <option value="1">Testing</option>
+                                <option value="2">Coastline &amp; plains</option>
+                                <option value="3">Agressive coast &amp; plains</option>
+                                <option value="9">Plains &amp; dramatic mountains</option>
+                            </select><i class="ti ti-chevron-down"></i>
                         </dd>
-                        <dd>@&nbsp;&nbsp;</dd>
-                        <dd><input type="number" min="0" max="250" step="1" id="tiltHeight"></dd>
-                        <dd><abbr>m</abbr></dd>
-                        <dt class="withCb">Streams:</dt>
-                            <dd><input type="checkbox" id="drawStrm"><i class="fas fa-check"></i></dd>
+                        <dd>&nbsp;</dd>
                     </dl>
-                    <header><h4>Draw options</h4><hr></header>
-                    <dl>
-                        <dt class="withCb">Marker: </dt>
-                        <dd><input type="checkbox" id="drawMarker"><i class="fas fa-check"></i></dd>
-                        <dt></dt>
-                        <dt class="withCb">Grid: </dt>
-                        <dd><input type="checkbox" id="drawGrid"><i class="fas fa-check"></i></dd>
-                    </dl>                   
-                    <header><h4>Smoothing &amp; leveling</h4><hr></header>
-                    <div class="row">                    
-                        <div>
-                            <div class="vertinput">To (m)</div>                           
-                            <div><dd><input type="number" min="0" max="250" step="10" id="plainsHeight"></dd></div>
-                        </div>
-                        <div>
-                            <div class="vertinput">Passes</div>                           
-                            <div><dd><input type="number" min="0" max="25" step="1" id="blurPasses"></dd></div>
-                        </div>
-                        <div>
-                            <div class="vertinput">Post pas.</div>                           
-                            <div><dd><input type="number" min="0" max="10" step="1" id="blurPostPasses"></dd></div>
-                        </div>                        
-                        <div>
-                            <div class="vertinput">Stream depth</div>                           
-                            <div><dd><input type="number" min="0" max="10" step="1" id="streamDepth"></dd></div>
-                        </div>                        
-                    </div>
-                    <br>
-                    <div class="row">
-                        <dl>
-                            <dt>Level correction:</dt>
-                            <dd class="wsSlp wideSelect">
-                                <select data-model="levelCorrection">
-                                    <option value="0">None</option>
-                                    <option value="1">Testing</option>
-                                    <option value="2">Coastline &amp; plains</option>
-                                    <option value="3">Agressive coast &amp; plains</option>
-                                    <option value="9">Plains &amp; dramatic mountains</option>
-                                </select><i class="fas fa-chevron-down"></i>
-                            </dd>
-                            <dd>&nbsp;</dd>
-                        </dl>
-                    </div>
                 </div>
             </div>
-            <hr>
-            <div class="footer">
-                <progress id="progress" value="0" max="500"></progress>
-                <!-- <p class="fill"></p> -->
-                <button onclick="getHeightmap(2)"><i class="fas fa-sync-alt"></i>Refresh</button>
-                <button onclick="autoSettings()"><i class="fas fa-cog"></i>Auto</button>
-            </div>
         </div>
-
-        <div id="stylePanel" class="panel slide-out hidden">
-            <h3>Map style:</h3>
-            <div id="mapstyle">
-                <label for="streets-v11"><input id="streets-v11" type="radio" name="msGroup" value="streets" onclick="setMapStyle(this)">Streets</label>
-                <label for="outdoors-v11"><input id="outdoors-v11" type="radio" name="msGroup" value="outdoors" onclick="setMapStyle(this)">Outdoors</label>
-                <label for="satellite-v9"><input id="satellite-v9" type="radio" name="msGroup" value="satellite" onclick="setMapStyle(this)">Satellite</label>
-                <label for="light-v10"><input id="light-v10" type="radio" name="msGroup" value="light" onclick="setMapStyle(this)">Light</label>
-                <label for="dark-v10"><input id="dark-v10" type="radio" name="msGroup" value="dark" onclick="setMapStyle(this)">Dark</label>
-            </div>
-        </div>
-
-        <div id="pinPanel" class="panel slide-out hidden">
-            <h3>Lng / Lat:</h3>
-            <dl>
-                <div><dt>Longitude:</dt><dd><input type="text" id="lngInput"></dd><dd><abbr>&#176;</abbr></dd></div>
-                <div><dt>Latitude:</dt><dd><input type="text" id="latInput"></dd><dd><abbr>&#176;</abbr></dd></div>
-            </dl>
-            <hr>
-            <div class="footer">
-                <p class="fill"></p>
-                <button onclick="setLngLat(0)" class="outline">Current pos.</button>
-                <button onclick="setLngLat(1)" class="outline">Clear</button>
-                <button onclick="setLngLat(2)"><i class="fas fa-check"></i>Apply</button>
-            </div>
+        <hr>
+        <div class="footer">
+            <progress id="progress" value="0" max="500"></progress>
+            <!-- <p class="fill"></p> -->
+            <button onclick="getHeightmap(2)"><i class="ti ti-refresh"></i>Refresh</button>
+            <button onclick="autoSettings()"><i class="ti ti-cog"></i>Auto</button>
         </div>
     </div>
 
-    <script src="lib.js"></script>
-    <script src="jszip.js"></script>
-    <script src="pako.min.js"></script>
-    <script src="upng.js"></script>
-    <script src='tiles.js'></script>
-    <script src="binding.js"></script> <!-- needs to be loaded before app, for scope var-->
-    <script src="app.js"></script>
+    <div id="stylePanel" class="panel slide-out hidden">
+        <h3>Map style:</h3>
+        <div id="mapstyle">
+            <label for="streets-v11"><input id="streets-v11" type="radio" name="msGroup" value="streets" onclick="setMapStyle(this)">Streets</label>
+            <label for="outdoors-v11"><input id="outdoors-v11" type="radio" name="msGroup" value="outdoors" onclick="setMapStyle(this)">Outdoors</label>
+            <label for="satellite-v9"><input id="satellite-v9" type="radio" name="msGroup" value="satellite" onclick="setMapStyle(this)">Satellite</label>
+            <label for="light-v10"><input id="light-v10" type="radio" name="msGroup" value="light" onclick="setMapStyle(this)">Light</label>
+            <label for="dark-v10"><input id="dark-v10" type="radio" name="msGroup" value="dark" onclick="setMapStyle(this)">Dark</label>
+        </div>
+    </div>
+
+    <div id="pinPanel" class="panel slide-out hidden">
+        <h3>Lng / Lat:</h3>
+        <dl>
+            <div><dt>Longitude:</dt><dd><input type="text" id="lngInput"></dd><dd><abbr>&#176;</abbr></dd></div>
+            <div><dt>Latitude:</dt><dd><input type="text" id="latInput"></dd><dd><abbr>&#176;</abbr></dd></div>
+        </dl>
+        <hr>
+        <div class="footer">
+            <p class="fill"></p>
+            <button onclick="setLngLat(0)" class="outline">Current pos.</button>
+            <button onclick="setLngLat(1)" class="outline">Clear</button>
+            <button onclick="setLngLat(2)"><i class="ti ti-check"></i>Apply</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function showAlert() {
+        const checkApi = localStorage.getItem('mapboxApiToken') || 'null';
+        if (checkApi === 'null')
+            alert ("Set MAPBOX API TOKEN in the settings panel (expand 'I' icon) and refresh page! \n\n" +
+                "You can get it for free at https://www.mapbox.com/\n\n" +
+                "This is required for this app to work properly!");
+    }
+</script>
+<body onload="showAlert()">
+
+<script src="lib.js"></script>
+<script src="jszip.js"></script>
+<script src="pako.min.js"></script>
+<script src="upng.js"></script>
+<script src='tiles.js'></script>
+<script src="binding.js"></script> <!-- needs to be loaded before app, for scope var-->
+<script src="app.js"></script>
 </body>
 
 </html>
