@@ -1550,3 +1550,30 @@ function getInfo(fileName) {
         'Height contours: ' + grid.heightContours + '\n' +
         'Zoom: ' + grid.zoom + '\n';
 }
+
+// Function to get the API token from local storage, otherwise null
+function getApiToken() {
+    return localStorage.getItem('mapboxApiToken') || 'null';
+}
+
+// Function to save the API token to local storage
+function saveApiToken() {
+    const token = document.getElementById('mapboxApiToken').value;
+    if (token) {
+        localStorage.setItem('mapboxApiToken', token);
+        alert('API token saved! Refresh the page to apply the changes.');
+    } else {
+        alert('Please enter a valid API token.');
+    }
+}
+
+// Set the Mapbox API token
+mapboxgl.accessToken = getApiToken();
+
+// Event listener to load the saved API token into the input field on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const savedToken = localStorage.getItem('mapboxApiToken');
+    if (savedToken) {
+        document.getElementById('mapboxApiToken').value = savedToken;
+    }
+});
