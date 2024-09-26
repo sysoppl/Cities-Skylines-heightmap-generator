@@ -57,7 +57,3 @@ _Original text by the original author below_
 ## Frequently Asked Questions
 **Q:** When downloading the map, Chrome says `heightmap.raw is not commonly downloaded and may be dangerous`.  
 **A:** Click the arrow up and choose `keep`. Heightmaps are safe to download.
-
----
-
-Feel free to adjust any part of this to better suit your needs!
