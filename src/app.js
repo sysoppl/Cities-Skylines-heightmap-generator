@@ -509,7 +509,7 @@ function togglePanel(index) {
     }
 
     panels[index].setAttribute('class', isOpens[index] ? 'panel slide-out' : 'panel slide-in');
-    icons[index].setAttribute('class', isOpens[index] ? iconClass[index] : 'icon fas fa-angle-left');
+    icons[index].setAttribute('class', isOpens[index] ? iconClass[index] : 'icon ti ti-info-circle');
 
     // initial settings when each panel is opened
     switch (index) {
