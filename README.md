@@ -5,12 +5,8 @@
 Generate heightmaps for Cities: Skylines with ease!  
 **Check it out: [heightmap.skydark.pl](https://heightmap.skydark.pl)**
 
-<br>
-
 > [!WARNING]
 > You NEED to set your own mapbox API key in settings to make this app work for you!
-
-<br>
 
 ## Features
 - **User-friendly interface**
