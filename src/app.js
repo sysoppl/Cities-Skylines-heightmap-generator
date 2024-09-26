@@ -43,8 +43,8 @@ if (debug) while (debugElements.length > 0) {
     debugElements[0].classList.remove('debug');
 }
 
-// MapBox API token, just variable to hold user api token later
-mapboxgl.accessToken = '';
+// Set the Mapbox API token
+mapboxgl.accessToken = getApiToken();
 
 var map = new mapboxgl.Map({
     container: 'map',                               // Specify the container ID
@@ -1566,9 +1566,6 @@ function saveApiToken() {
         alert('Please enter a valid API token.');
     }
 }
-
-// Set the Mapbox API token
-mapboxgl.accessToken = getApiToken();
 
 // Event listener to load the saved API token into the input field on page load
 document.addEventListener('DOMContentLoaded', () => {
