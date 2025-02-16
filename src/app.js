@@ -568,7 +568,7 @@ function sanatizeWatermap(map, xOffset, yOffset) {
     let watermap = Create2DArray(citiesmapSize, 0);
 
     for (let y = yOffset; y < yOffset + citiesmapSize; y++) {
-        for (let x = xOffset; x < yOffset + citiesmapSize; x++) {
+        for (let x = xOffset; x < xOffset + citiesmapSize; x++) {
             let h = map[y][x];
             watermap[y - yOffset][x - xOffset] = h;
         }
